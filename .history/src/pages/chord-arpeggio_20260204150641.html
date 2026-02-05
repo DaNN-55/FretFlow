@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>和弦与琶音训练</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap"
+    />
+    <link rel="stylesheet" href="../styles/guitartraining.css" />
+    <link rel="stylesheet" href="../styles/chord-arpeggio.css" />
+  </head>
+  <body class="chord-arpeggio">
+    <div class="page">
+      <header class="page-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">FretFlow · 和弦与琶音训练</p>
+          <h1>和弦与琶音训练</h1>
+          <p class="hero-subtitle">
+            以 CAGED 指型为核心，快速切换调式与和弦，聚焦根音和琶音路径。
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-title">训练提示</div>
+          <div class="hero-card-body">
+            <div class="tip-row">
+              <span class="tip-label">节奏</span>
+              <span>从 60 BPM 起步，逐步递增。</span>
+            </div>
+            <div class="tip-row">
+              <span class="tip-label">听感</span>
+              <span>切换上行/下行，感受张力变化。</span>
+            </div>
+            <div class="tip-row">
+              <span class="tip-label">定位</span>
+              <span>打开根音高亮确认落点。</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="control-panel">
+        <div class="control-panel-grid">
+          <div class="control-group">
+            <div class="group-title">指型与 CAGED</div>
+            <div class="control-row">
+              <div class="btn-group">
+                <button type="button" data-pattern="1" aria-pressed="false">
+                  指型1 (C型)
+                </button>
+                <button type="button" data-pattern="2" aria-pressed="false">
+                  指型2 (A型)
+                </button>
+                <button type="button" data-pattern="3" aria-pressed="false">
+                  指型3 (G型)
+                </button>
+                <button type="button" data-pattern="4" aria-pressed="false">
+                  指型4 (E型)
+                </button>
+                <button type="button" data-pattern="5" aria-pressed="false">
+                  指型5 (D型)
+                </button>
+              </div>
+              <div class="switch-box">
+                <span class="switch-label">CAGED System</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="cagedToggle"
+                    aria-label="切换 CAGED 和弦音显示"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="group-title">调式与和弦</div>
+            <div class="control-row">
+              <label class="field">
+                根音
+                <select id="rootSelect" aria-label="选择根音">
+                  <option value="C">C</option>
+                  <option value="C#">C#</option>
+                  <option value="D">D</option>
+                  <option value="D#">D#</option>
+                  <option value="E">E</option>
+                  <option value="F">F</option>
+                  <option value="F#">F#</option>
+                  <option value="G">G</option>
+                  <option value="G#">G#</option>
+                  <option value="A">A</option>
+                  <option value="A#">A#</option>
+                  <option value="B">B</option>
+                </select>
+              </label>
+              <label class="field">
+                音阶
+                <select id="scaleSelect" aria-label="选择音阶">
+                  <option value="major">大调</option>
+                  <option value="minor">自然小调</option>
+                  <option value="pentatonicMajor">大五声音阶</option>
+                  <option value="pentatonicMinor">小五声音阶</option>
+                </select>
+              </label>
+              <label class="field">
+                和弦
+                <select id="chordSelect" aria-label="选择和弦类型">
+                  <option value="majorTriad">大三和弦</option>
+                  <option value="minorTriad">小三和弦</option>
+                  <option value="dominant7">属七</option>
+                  <option value="major7">大七</option>
+                  <option value="minor7">小七</option>
+                </select>
+              </label>
+              <div class="switch-box">
+                <span class="switch-label">高亮根音</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="highlightRootToggle"
+                    aria-label="高亮根音"
+                    checked
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="group-title">琶音路径</div>
+            <div class="control-row">
+              <div class="switch-box">
+                <span class="switch-label">琶音路径</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="arpeggioToggle"
+                    aria-label="开启琶音路径"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <label class="field">
+                方向
+                <select id="arpeggioDirection" aria-label="琶音方向">
+                  <option value="asc">上行</option>
+                  <option value="desc">下行</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="group-title">节拍器</div>
+            <div class="control-row">
+              <div class="metronome-toggle">
+                <label for="metronomeToggle">开启</label>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="metronomeToggle"
+                    aria-label="开启节拍器"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="metronome-speed">
+                <label for="metronomeSpeed">速度 (BPM)</label>
+                <input
+                  type="range"
+                  id="metronomeSpeed"
+                  min="40"
+                  max="200"
+                  value="120"
+                />
+                <div class="metronome-speed-value">
+                  <span id="speedValue">120</span> BPM
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="fretboard-section">
+        <div class="section-header">
+          <h2>指板视图</h2>
+          <p>拖动横向滚动，完整查看 0-15 品标记。</p>
+        </div>
+        <div class="fretboard-shell">
+          <div class="fretboard-wrapper">
+            <div id="fretboard" class="fretboard"></div>
+            <div id="fretNumbers" class="fret-numbers"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="../chord-arpeggio.js"></script>
+  </body>
+</html>

@@ -1,0 +1,386 @@
+:root {
+  --fret-color: #ddd;
+  --string-color: #aaa;
+  --note-scale: #1f7ae0;
+  --note-gold: #ffd700;
+  --fretboard-bg: #3e2723;
+  --bili-pink: #fb7299;
+  --root-note: #ff7043;
+  --control-bg: #ffffff;
+  --page-bg: #f2f2f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--page-bg);
+  padding: 16px;
+  margin: 0;
+  color: #222;
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--control-bg);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  width: min(1200px, 100%);
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.control-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  min-width: 72px;
+}
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button {
+  padding: 9px 12px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+button.active {
+  background: var(--note-scale);
+  color: #fff;
+  border-color: var(--note-scale);
+}
+
+select,
+input[type="range"] {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.control-row select {
+  appearance: none;
+  padding: 8px 34px 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #2da44e;
+  background-color: #f6ffed;
+  color: #1f6f3d;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  box-shadow:
+    0 1px 0 rgba(27, 31, 36, 0.04),
+    inset 0 0 0 1px rgba(45, 164, 78, 0.2);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 8px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.control-row select:hover {
+  background-color: #e6ffdb;
+  border-color: #2c974b;
+  box-shadow:
+    0 2px 6px rgba(45, 164, 78, 0.18),
+    inset 0 0 0 1px rgba(45, 164, 78, 0.24);
+}
+
+.control-row select:focus {
+  outline: none;
+  border-color: #2da44e;
+  box-shadow:
+    0 0 0 3px rgba(45, 164, 78, 0.35),
+    inset 0 0 0 1px rgba(45, 164, 78, 0.3);
+}
+
+.control-row select:active {
+  transform: translateY(1px);
+}
+
+.switch-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 1px solid #eee;
+  padding-left: 16px;
+}
+
+.switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 4px;
+  background-color: #fff;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--note-gold);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+.fretboard-wrapper {
+  position: relative;
+  width: min(1200px, 100%);
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.fretboard {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  background: var(--fretboard-bg);
+  border: 4px solid #222;
+  border-radius: 4px;
+  position: relative;
+  min-width: 1150px;
+}
+
+.string {
+  display: grid;
+  grid-template-columns: 0.5fr repeat(15, 1fr);
+  height: 38px;
+  position: relative;
+}
+
+.string::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--string-color);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.fret {
+  border-right: 2px solid var(--fret-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.fret-0 {
+  border-right: 5px solid #eee;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.note {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--note-scale);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.note.root-note {
+  background: var(--root-note);
+  box-shadow: 0 0 8px rgba(255, 112, 67, 0.8);
+}
+
+.note .degree {
+  position: absolute;
+  bottom: -12px;
+  font-size: 9px;
+  color: #ffdede;
+}
+
+@keyframes golden-breath {
+  0%,
+  100% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0);
+    border: 1px solid transparent;
+  }
+  50% {
+    box-shadow: 0 0 10px 4px rgba(255, 215, 0, 0.8);
+    border: 1px solid var(--note-gold);
+  }
+}
+
+/* 基础显示逻辑 */
+.fretboard.pattern-1 .p1.in-scale,
+.fretboard.pattern-2 .p2.in-scale,
+.fretboard.pattern-3 .p3.in-scale,
+.fretboard.pattern-4 .p4.in-scale,
+.fretboard.pattern-5 .p5.in-scale {
+  display: flex;
+}
+
+/* 呼吸灯逻辑：仅当音符在当前激活的指型中被定义为“有效和弦音(ct)”时闪烁 */
+.fretboard:not(.caged-on).pattern-1 .p1.in-scale.ct1,
+.fretboard:not(.caged-on).pattern-2 .p2.in-scale.ct2,
+.fretboard:not(.caged-on).pattern-3 .p3.in-scale.ct3,
+.fretboard:not(.caged-on).pattern-4 .p4.in-scale.ct4,
+.fretboard:not(.caged-on).pattern-5 .p5.in-scale.ct5 {
+  animation: golden-breath 2s infinite ease-in-out;
+}
+
+/* CAGED 模式激活时的逻辑 */
+.fretboard.caged-on .note {
+  display: none !important;
+}
+
+.fretboard.caged-on.pattern-1 .p1.in-scale.ct1,
+.fretboard.caged-on.pattern-2 .p2.in-scale.ct2,
+.fretboard.caged-on.pattern-3 .p3.in-scale.ct3,
+.fretboard.caged-on.pattern-4 .p4.in-scale.ct4,
+.fretboard.caged-on.pattern-5 .p5.in-scale.ct5 {
+  display: flex !important;
+  background: var(--note-gold);
+  color: #332200;
+}
+
+.inlay {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.fret-numbers {
+  display: grid;
+  grid-template-columns: 0.5fr repeat(15, 1fr);
+  width: 100%;
+  margin-top: 10px;
+  min-width: 1150px;
+}
+
+.num {
+  text-align: center;
+  font-size: 12px;
+  color: #777;
+  font-weight: 700;
+}
+
+.metronome-toggle,
+.metronome-speed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.metronome-speed input[type="range"] {
+  width: 150px;
+  cursor: pointer;
+}
+
+.metronome-speed-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--note-scale);
+  min-width: 75px;
+  text-align: center;
+}
+
+.footer {
+  margin-top: 40px;
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid #ddd;
+  width: min(1200px, 100%);
+}
+
+.footer .name {
+  font-size: 14px;
+  color: #666;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.footer a {
+  color: var(--bili-pink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.3s;
+}
+
+.footer a:hover {
+  opacity: 0.8;
+  text-shadow: 0 0 8px rgba(251, 114, 153, 0.2);
+}
+
+@media (max-width: 768px) {
+  .control-label {
+    min-width: auto;
+  }
+
+  .switch-box {
+    border-left: none;
+    padding-left: 0;
+  }
+}

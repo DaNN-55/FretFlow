@@ -1,0 +1,513 @@
+:root {
+  --page-bg: #eaf3ff;
+  --page-text: #1b2a4a;
+  --control-bg: #f5f9ff;
+  --panel-border: #c9dcff;
+  --note-scale: #2563eb;
+  --note-gold: #fbbf24;
+  --root-note: #f97316;
+  --cta-green: #22c55e;
+  --fretboard-bg: #3a2722;
+  --card-bg: #ffffff;
+  --card-border: #d4e2ff;
+  --card-shadow: rgba(37, 99, 235, 0.12);
+}
+
+body.chord-arpeggio {
+  font-family:
+    "Poppins", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui,
+    sans-serif;
+  background:
+    radial-gradient(
+      circle at 12% 12%,
+      rgba(59, 130, 246, 0.18),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 88% 8%,
+      rgba(147, 197, 253, 0.26),
+      transparent 55%
+    ),
+    linear-gradient(150deg, #f2f7ff 0%, #e2efff 45%, #f8fbff 100%);
+  color: var(--page-text);
+  margin: 0;
+  padding: 28px 16px 36px;
+  display: block;
+}
+
+body.chord-arpeggio .page {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+body.chord-arpeggio .page-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+body.chord-arpeggio .hero-copy h1 {
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 6px 0 10px;
+  letter-spacing: 0.5px;
+}
+
+body.chord-arpeggio .eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.72);
+}
+
+body.chord-arpeggio .hero-subtitle {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(27, 42, 74, 0.72);
+  line-height: 1.6;
+}
+
+body.chord-arpeggio .hero-card {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow:
+    0 18px 30px rgba(37, 99, 235, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+body.chord-arpeggio .hero-card-title {
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.4px;
+}
+
+body.chord-arpeggio .hero-card-body {
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(27, 42, 74, 0.78);
+}
+
+body.chord-arpeggio .tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(37, 99, 235, 0.18);
+}
+
+body.chord-arpeggio .tip-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+body.chord-arpeggio .tip-label {
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.7);
+}
+
+body.chord-arpeggio .control-panel {
+  background: var(--control-bg);
+  border: 2px solid var(--panel-border);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow:
+    0 20px 34px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  margin-bottom: 0;
+}
+
+body.chord-arpeggio .mode-toggle {
+  display: inline-flex;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #e7f0ff;
+  border: 2px solid #c7dbff;
+  box-shadow:
+    0 10px 18px rgba(37, 99, 235, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+}
+
+body.chord-arpeggio .mode-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.72);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+body.chord-arpeggio .mode-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
+}
+
+body.chord-arpeggio.mode-caged .training-only,
+body.chord-arpeggio.mode-training .caged-only {
+  display: none;
+}
+
+body.chord-arpeggio .control-panel-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+body.chord-arpeggio.mode-training .control-panel-grid {
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+}
+
+body.chord-arpeggio .scale-group {
+  order: 1;
+}
+
+body.chord-arpeggio .metronome-group {
+  order: 2;
+}
+
+body.chord-arpeggio .compact-controls {
+  gap: 10px;
+  align-items: center;
+}
+
+body.chord-arpeggio .compact-controls .field-inline {
+  gap: 8px;
+}
+
+body.chord-arpeggio .compact-controls .switch-box {
+  padding: 4px 8px;
+}
+
+body.chord-arpeggio.mode-caged .caged-only {
+  order: 1;
+}
+
+body.chord-arpeggio.mode-caged .metronome-group {
+  order: 2;
+}
+
+body.chord-arpeggio .control-group {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow:
+    0 10px 18px var(--card-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+body.chord-arpeggio .group-title {
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.4px;
+}
+
+body.chord-arpeggio .control-row {
+  align-items: center;
+  gap: 12px;
+}
+
+body.chord-arpeggio .btn-group button {
+  background: #ffffff;
+  color: #1b2a4a;
+  border: 2px solid #c7dbff;
+  border-radius: 14px;
+  padding: 9px 12px;
+  font-weight: 700;
+  box-shadow:
+    0 4px 8px rgba(37, 99, 235, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+body.chord-arpeggio .btn-group button:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 12px rgba(37, 99, 235, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+body.chord-arpeggio button.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+body.chord-arpeggio .fretboard.show-scale .note.in-scale,
+body.chord-arpeggio .fretboard.show-chord .note.in-scale,
+body.chord-arpeggio .fretboard.show-arpeggio .note.in-scale,
+body.chord-arpeggio .fretboard.show-caged .note.caged-note {
+  display: flex;
+}
+
+body.chord-arpeggio .note.caged-note {
+  background: #fbbf24;
+  color: #4b3600;
+  box-shadow:
+    0 0 0 2px #ffffff inset,
+    0 0 12px rgba(251, 191, 36, 0.45);
+}
+
+body.chord-arpeggio label.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(27, 42, 74, 0.7);
+  min-width: 140px;
+}
+
+body.chord-arpeggio select,
+body.chord-arpeggio input[type="range"] {
+  border: 2px solid #c7dbff;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1b2a4a;
+  font-weight: 600;
+  height: 40px;
+}
+
+body.chord-arpeggio .control-row select {
+  appearance: none;
+  padding: 8px 36px 8px 12px;
+  line-height: 1.2;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%231B2A4A' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+  box-shadow: none;
+}
+
+body.chord-arpeggio select option {
+  color: #1b2a4a;
+}
+
+body.chord-arpeggio .switch-box {
+  border: 2px solid #c7dbff;
+  background: #e7f0ff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  gap: 10px;
+}
+
+body.chord-arpeggio .switch-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.7);
+}
+
+body.chord-arpeggio .slider {
+  background-color: rgba(37, 99, 235, 0.25);
+}
+
+body.chord-arpeggio input:checked + .slider {
+  background-color: #2563eb;
+}
+
+body.chord-arpeggio .slider:before {
+  background-color: #f8fafc;
+}
+
+body.chord-arpeggio .metronome-toggle,
+body.chord-arpeggio .metronome-speed {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.chord-arpeggio .metronome-toggle label,
+body.chord-arpeggio .metronome-speed label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(27, 42, 74, 0.7);
+}
+
+body.chord-arpeggio .metronome-speed input[type="range"] {
+  width: 180px;
+}
+
+body.chord-arpeggio .metronome-speed-value {
+  color: #1d4ed8;
+}
+
+body.chord-arpeggio .fretboard-section {
+  display: grid;
+  gap: 12px;
+}
+
+body.chord-arpeggio .section-header h2 {
+  margin: 0;
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 18px;
+}
+
+body.chord-arpeggio .metronome-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #ffffff;
+  border: 2px solid #c7dbff;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow:
+    0 10px 18px rgba(37, 99, 235, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.chord-arpeggio .metronome-inline .metronome-speed {
+  flex: 1;
+  min-width: 240px;
+  justify-content: flex-end;
+}
+
+body.chord-arpeggio .settings-inline {
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+body.chord-arpeggio .settings-inline .field {
+  min-width: 200px;
+}
+
+body.chord-arpeggio .field.field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+body.chord-arpeggio .field-label {
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.4px;
+  color: rgba(27, 42, 74, 0.72);
+  min-width: 48px;
+}
+
+body.chord-arpeggio .settings-inline select {
+  border-radius: 999px;
+  padding: 6px 40px 6px 14px;
+  height: 36px;
+  min-width: 180px;
+  width: 180px;
+}
+
+body.chord-arpeggio .section-header p {
+  margin: 6px 0 0;
+  color: rgba(27, 42, 74, 0.7);
+  font-size: 13px;
+}
+
+body.chord-arpeggio .fretboard-shell {
+  background: #ffffff;
+  border: 2px solid #c7dbff;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow:
+    0 16px 30px rgba(37, 99, 235, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.chord-arpeggio .fretboard-wrapper {
+  background: #ead9cf;
+  border-radius: 14px;
+  padding: 12px;
+  border: 2px solid #c7dbff;
+}
+
+body.chord-arpeggio .fretboard {
+  border-color: #2c201a;
+}
+
+body.chord-arpeggio .fret-numbers .num {
+  color: rgba(27, 42, 74, 0.5);
+}
+
+body.chord-arpeggio button:focus-visible,
+body.chord-arpeggio select:focus-visible,
+body.chord-arpeggio input[type="range"]:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 2px;
+}
+
+body.chord-arpeggio .switch input:focus-visible + .slider {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+@media (max-width: 900px) {
+  body.chord-arpeggio .page-hero {
+    grid-template-columns: 1fr;
+  }
+
+  body.chord-arpeggio .hero-card {
+    order: -1;
+  }
+}
+
+@media (max-width: 700px) {
+  body.chord-arpeggio .btn-group button {
+    flex: 1 1 120px;
+  }
+
+  body.chord-arpeggio .control-panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.chord-arpeggio * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.note.arp-step {
+  background: var(--note-gold);
+  color: #332200;
+  border: 2px solid #fff;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+}
+
+.note.arp-muted {
+  opacity: 0.35;
+}
+
+.note .arp-index {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: #fff;
+  color: #222;
+  font-size: 9px;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
