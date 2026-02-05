@@ -13,11 +13,11 @@
     <link rel="stylesheet" href="../styles/guitartraining.css" />
     <link rel="stylesheet" href="../styles/chord-arpeggio.css" />
   </head>
-  <body class="chord-arpeggio mode-training">
+  <body class="chord-arpeggio">
     <div class="page">
       <header class="page-hero">
         <div class="hero-copy">
-          <p class="eyebrow">FretFlow</p>
+          <p class="eyebrow"></p>
           <h1>FretFlow · 和弦与琶音训练</h1>
           <p class="hero-subtitle">
             以 CAGED 指型为核心，快速切换调式与和弦，聚焦根音和琶音路径。
@@ -43,32 +43,46 @@
       </header>
 
       <section class="control-panel">
-        <div class="mode-toggle" role="tablist" aria-label="训练模式切换">
-          <button
-            type="button"
-            class="mode-btn active"
-            data-mode="training"
-            role="tab"
-            aria-selected="true"
-          >
-            训练模式
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            data-mode="caged"
-            role="tab"
-            aria-selected="false"
-          >
-            CAGED 模式
-          </button>
-        </div>
         <div class="control-panel-grid">
-          <div class="control-group training-only scale-group">
-            <div class="group-title">音阶</div>
-            <div class="control-row compact-controls">
-              <label class="field field-inline">
-                <span class="field-label">根音</span>
+          <div class="control-group">
+            <div class="group-title">CAGED指型</div>
+            <div class="control-row">
+              <div class="btn-group">
+                <button type="button" data-pattern="1" aria-pressed="false">
+                  指型1 (C型)
+                </button>
+                <button type="button" data-pattern="2" aria-pressed="false">
+                  指型2 (A型)
+                </button>
+                <button type="button" data-pattern="3" aria-pressed="false">
+                  指型3 (G型)
+                </button>
+                <button type="button" data-pattern="4" aria-pressed="false">
+                  指型4 (E型)
+                </button>
+                <button type="button" data-pattern="5" aria-pressed="false">
+                  指型5 (D型)
+                </button>
+              </div>
+              <div class="switch-box">
+                <span class="switch-label">CAGED System</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="cagedToggle"
+                    aria-label="切换 CAGED 和弦音显示"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="group-title">和弦指型</div>
+            <div class="control-row">
+              <label class="field">
+                根音
                 <select id="rootSelect" aria-label="选择根音">
                   <option value="C">C</option>
                   <option value="C#">C#</option>
@@ -84,22 +98,44 @@
                   <option value="B">B</option>
                 </select>
               </label>
-              <label class="field field-inline">
-                <span class="field-label">调式</span>
-                <select id="scaleSelect" aria-label="选择音阶调式">
-                  <option value="major">自然大调</option>
+              <label class="field">
+                音阶
+                <select id="scaleSelect" aria-label="选择音阶">
+                  <option value="major">大调</option>
                   <option value="minor">自然小调</option>
                   <option value="pentatonicMajor">大五声音阶</option>
                   <option value="pentatonicMinor">小五声音阶</option>
                 </select>
               </label>
+              <label class="field">
+                和弦
+                <select id="chordSelect" aria-label="选择和弦类型">
+                  <option value="majorTriad">大三和弦</option>
+                  <option value="minorTriad">小三和弦</option>
+                  <option value="dominant7">属七</option>
+                  <option value="major7">大七</option>
+                  <option value="minor7">小七</option>
+                </select>
+              </label>
               <div class="switch-box">
-                <span class="switch-label">音阶显示</span>
+                <span class="switch-label">和弦指型</span>
                 <label class="switch">
                   <input
                     type="checkbox"
-                    id="scaleToggle"
-                    aria-label="显示音阶"
+                    id="chordToneToggle"
+                    aria-label="显示和弦指型"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="switch-box">
+                <span class="switch-label">高亮根音</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="highlightRootToggle"
+                    aria-label="高亮根音"
+                    checked
                   />
                   <span class="slider"></span>
                 </label>
@@ -107,7 +143,31 @@
             </div>
           </div>
 
-          <div class="control-group metronome-group">
+          <div class="control-group">
+            <div class="group-title">琶音</div>
+            <div class="control-row">
+              <div class="switch-box">
+                <span class="switch-label">琶音路径</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="arpeggioToggle"
+                    aria-label="开启琶音路径"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <label class="field">
+                方向
+                <select id="arpeggioDirection" aria-label="琶音方向">
+                  <option value="asc">上行</option>
+                  <option value="desc">下行</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
             <div class="group-title">节拍器</div>
             <div class="control-row">
               <div class="metronome-toggle">
@@ -136,54 +196,19 @@
               </div>
             </div>
           </div>
-
-          <div class="control-group caged-only">
-            <div class="group-title">CAGED指型</div>
-            <div class="control-row">
-              <div class="btn-group">
-                <button type="button" data-pattern="1" aria-pressed="false">
-                  C指型
-                </button>
-                <button type="button" data-pattern="2" aria-pressed="false">
-                  A指型
-                </button>
-                <button type="button" data-pattern="3" aria-pressed="false">
-                  G指型
-                </button>
-                <button type="button" data-pattern="4" aria-pressed="false">
-                  E指型
-                </button>
-                <button type="button" data-pattern="5" aria-pressed="false">
-                  D指型
-                </button>
-              </div>
-              <div class="switch-box">
-                <span class="switch-label">CAGED System</span>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="cagedToggle"
-                    aria-label="切换 CAGED 和弦音显示"
-                  />
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      <section class="fretboard-section training-only" id="trainingFretboardSection">
-        <div class="fretboard-shell" id="fretboardShell">
+      <section class="fretboard-section">
+        <div class="section-header">
+          <h2>指板视图</h2>
+        </div>
+        <div class="fretboard-shell">
           <div class="fretboard-wrapper">
             <div id="fretboard" class="fretboard"></div>
             <div id="fretNumbers" class="fret-numbers"></div>
           </div>
         </div>
-      </section>
-
-      <section class="fretboard-section caged-only" id="cagedFretboardSection">
-        <div id="cagedFretboardMount"></div>
       </section>
     </div>
 
