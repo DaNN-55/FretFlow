@@ -63,6 +63,15 @@
           >
             CAGED 模式
           </button>
+          <button
+            type="button"
+            class="mode-btn"
+            data-mode="rhythm"
+            role="tab"
+            aria-selected="false"
+          >
+            节奏模式
+          </button>
         </div>
         <div class="control-panel-grid">
           <div class="control-group training-only scale-group">
@@ -139,7 +148,7 @@
             </div>
           </div>
 
-          <div class="control-group metronome-group">
+          <div class="control-group metronome-group training-caged-only">
             <div class="group-title">节拍器</div>
             <div class="control-row">
               <div class="metronome-toggle">
@@ -202,6 +211,70 @@
               </div>
             </div>
           </div>
+
+          <div class="control-group rhythm-only rhythm-group">
+            <div class="group-title">节奏设置</div>
+            <div class="control-row compact-controls">
+              <div class="switch-box">
+                <span class="switch-label">开始</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="rhythmStartToggle"
+                    aria-label="开始节奏模式"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <label class="field field-inline">
+                <span class="field-label">拍号</span>
+                <select id="rhythmSignature" aria-label="选择拍号">
+                  <option value="4/4">4/4</option>
+                  <option value="3/4">3/4</option>
+                  <option value="6/8">6/8</option>
+                </select>
+              </label>
+              <label class="field field-inline">
+                <span class="field-label">细分</span>
+                <select id="rhythmSubdivision" aria-label="选择细分">
+                  <option value="quarter">四分</option>
+                  <option value="eighth">八分</option>
+                  <option value="sixteenth">十六分</option>
+                </select>
+              </label>
+              <div class="switch-box">
+                <span class="switch-label">声音提示</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="rhythmSoundToggle"
+                    aria-label="开启声音提示"
+                    checked
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="switch-box">
+                <span class="switch-label">亮灯提示</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="rhythmLightToggle"
+                    aria-label="开启亮灯提示"
+                    checked
+                  />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="metronome-speed">
+                <label for="rhythmBpm">速度 (BPM)</label>
+                <input type="range" id="rhythmBpm" min="40" max="200" value="90" />
+                <div class="metronome-speed-value">
+                  <span id="rhythmBpmValue">90</span> BPM
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -219,6 +292,15 @@
 
       <section class="fretboard-section caged-only" id="cagedFretboardSection">
         <div id="cagedFretboardMount"></div>
+      </section>
+
+      <section class="fretboard-section rhythm-only" id="rhythmSection">
+        <div class="fretboard-shell">
+          <div class="rhythm-stage">
+            <div class="rhythm-lights" id="rhythmLights"></div>
+            <div class="rhythm-step-label" id="rhythmStepLabel">准备开始</div>
+          </div>
+        </div>
       </section>
     </div>
 

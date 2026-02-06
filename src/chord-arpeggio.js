@@ -122,6 +122,15 @@ const metronomeSpeedValue = document.getElementById("speedValue");
 const fretboardShell = document.getElementById("fretboardShell");
 const trainingFretboardSection = document.getElementById("trainingFretboardSection");
 const cagedFretboardMount = document.getElementById("cagedFretboardMount");
+const rhythmStartToggle = document.getElementById("rhythmStartToggle");
+const rhythmSignature = document.getElementById("rhythmSignature");
+const rhythmSubdivision = document.getElementById("rhythmSubdivision");
+const rhythmSoundToggle = document.getElementById("rhythmSoundToggle");
+const rhythmLightToggle = document.getElementById("rhythmLightToggle");
+const rhythmBpm = document.getElementById("rhythmBpm");
+const rhythmBpmValue = document.getElementById("rhythmBpmValue");
+const rhythmLights = document.getElementById("rhythmLights");
+const rhythmStepLabel = document.getElementById("rhythmStepLabel");
 
 function getNotesFromFormula(root, intervals) {
   const rootIndex = chromaticScale.indexOf(root);
@@ -416,20 +425,21 @@ function setMode(mode) {
     if (scaleToggle) trainingState.scaleOn = scaleToggle.checked;
     const currentChordPos = getActiveChordPosition();
     if (currentChordPos) trainingState.chordPosition = currentChordPos;
-  } else {
+  } else if (currentMode === "caged") {
     cagedState.patterns = getActivePatterns();
     cagedState.cagedToggle = cagedToggle.checked;
   }
 
   document.body.classList.toggle("mode-training", mode === "training");
   document.body.classList.toggle("mode-caged", mode === "caged");
+  document.body.classList.toggle("mode-rhythm", mode === "rhythm");
   modeButtons.forEach((btn) => {
     const isActive = btn.dataset.mode === mode;
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-selected", String(isActive));
   });
 
-  const trainingDisabled = mode === "caged";
+  const trainingDisabled = mode !== "training";
   rootSelect.disabled = trainingDisabled;
   scaleSelect.disabled = trainingDisabled;
   if (scaleToggle) scaleToggle.disabled = trainingDisabled;
@@ -439,6 +449,10 @@ function setMode(mode) {
   if (highlightRootToggle) highlightRootToggle.disabled = trainingDisabled;
   if (arpeggioToggle) arpeggioToggle.disabled = trainingDisabled;
   if (arpeggioDirectionSelect) arpeggioDirectionSelect.disabled = trainingDisabled;
+  patternButtons.forEach((btn) => {
+    btn.disabled = mode !== "caged";
+  });
+  cagedToggle.disabled = mode !== "caged";
 
   if (mode === "caged") {
     rootSelect.value = "C";
@@ -453,7 +467,7 @@ function setMode(mode) {
     }
     resetBoardVisuals();
     applyPatternState(cagedState.patterns);
-  } else {
+  } else if (mode === "training") {
     rootSelect.value = trainingState.root;
     scaleSelect.value = trainingState.scale;
     if (scaleToggle) scaleToggle.checked = trainingState.scaleOn;
@@ -470,6 +484,19 @@ function setMode(mode) {
       trainingFretboardSection.appendChild(fretboardShell);
     }
     resetBoardVisuals();
+  } else {
+    resetBoardVisuals();
+    if (rhythmStartToggle) rhythmStartToggle.checked = rhythmState.active;
+  }
+
+  if (mode === "rhythm") {
+    stopMetronome();
+    if (metronomeToggle) metronomeToggle.checked = false;
+    syncRhythmControls();
+    buildRhythmLights();
+  } else {
+    stopRhythm();
+    if (rhythmStartToggle) rhythmStartToggle.checked = false;
   }
 
   currentMode = mode;
@@ -487,6 +514,16 @@ let metronomeSpeed = 120;
 let audioContext = null;
 let nextNoteTime = 0;
 let schedulerTimer = null;
+const rhythmState = {
+  active: false,
+  bpm: 90,
+  signature: "4/4",
+  subdivision: "quarter",
+  soundOn: true,
+  lightOn: true,
+  step: 0,
+  timerId: null,
+};
 
 const lookahead = 25; // ms
 const scheduleAheadTime = 0.1; // seconds
@@ -513,6 +550,105 @@ function playMetronomeClick(time) {
 
   osc.start(time);
   osc.stop(time + 0.1);
+}
+
+function getRhythmConfig() {
+  const signature = rhythmSignature ? rhythmSignature.value : "4/4";
+  const subdivision = rhythmSubdivision ? rhythmSubdivision.value : "quarter";
+  const beatsPerBar = signature === "3/4" ? 3 : signature === "6/8" ? 6 : 4;
+  const stepsPerBeat = subdivision === "sixteenth" ? 4 : subdivision === "eighth" ? 2 : 1;
+  return {
+    beatsPerBar,
+    stepsPerBeat,
+    totalSteps: beatsPerBar * stepsPerBeat,
+  };
+}
+
+function buildRhythmLights() {
+  if (!rhythmLights) return;
+  const { beatsPerBar, stepsPerBeat, totalSteps } = getRhythmConfig();
+  rhythmLights.style.setProperty("--rhythm-steps", String(totalSteps));
+  rhythmLights.innerHTML = "";
+  for (let i = 0; i < totalSteps; i += 1) {
+    const light = document.createElement("div");
+    light.className = "rhythm-light";
+    if (i % stepsPerBeat === 0) light.classList.add("beat");
+    if (i === 0) light.classList.add("accent");
+    rhythmLights.appendChild(light);
+  }
+  if (rhythmStepLabel) rhythmStepLabel.textContent = "准备开始";
+}
+
+function updateRhythmVisual(step) {
+  if (!rhythmLights) return;
+  const lights = Array.from(rhythmLights.querySelectorAll(".rhythm-light"));
+  lights.forEach((light, idx) => {
+    light.classList.toggle("active", rhythmState.lightOn && idx === step);
+  });
+}
+
+function playRhythmClick(accent) {
+  if (!rhythmState.soundOn) return;
+  initAudioContext();
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.type = "sine";
+  osc.frequency.value = accent ? 1200 : 850;
+  const now = audioContext.currentTime;
+  gain.gain.setValueAtTime(accent ? 0.24 : 0.18, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+  osc.start(now);
+  osc.stop(now + 0.08);
+}
+
+function rhythmTick() {
+  const { beatsPerBar, stepsPerBeat, totalSteps } = getRhythmConfig();
+  const step = rhythmState.step % totalSteps;
+  const accent = step % stepsPerBeat === 0 && step / stepsPerBeat % beatsPerBar === 0;
+  playRhythmClick(accent);
+  updateRhythmVisual(step);
+  const beatNum = Math.floor(step / stepsPerBeat) + 1;
+  if (rhythmStepLabel) {
+    rhythmStepLabel.textContent = `第 ${beatNum} 拍 · 步进 ${step + 1}/${totalSteps}`;
+  }
+  rhythmState.step = (step + 1) % totalSteps;
+}
+
+function stopRhythm() {
+  rhythmState.active = false;
+  if (rhythmState.timerId) {
+    clearInterval(rhythmState.timerId);
+    rhythmState.timerId = null;
+  }
+  rhythmState.step = 0;
+  updateRhythmVisual(-1);
+  if (rhythmStepLabel) rhythmStepLabel.textContent = "准备开始";
+}
+
+function startRhythm() {
+  if (rhythmState.active) return;
+  const { stepsPerBeat } = getRhythmConfig();
+  const intervalMs = (60 / rhythmState.bpm / stepsPerBeat) * 1000;
+  rhythmState.active = true;
+  rhythmState.step = 0;
+  rhythmTick();
+  rhythmState.timerId = setInterval(rhythmTick, intervalMs);
+}
+
+function syncRhythmControls() {
+  if (rhythmBpm) rhythmState.bpm = parseInt(rhythmBpm.value, 10);
+  rhythmState.soundOn = rhythmSoundToggle ? rhythmSoundToggle.checked : true;
+  rhythmState.lightOn = rhythmLightToggle ? rhythmLightToggle.checked : true;
+  if (rhythmBpmValue) rhythmBpmValue.textContent = String(rhythmState.bpm);
+}
+
+function restartRhythmIfActive() {
+  buildRhythmLights();
+  if (!rhythmState.active) return;
+  stopRhythm();
+  startRhythm();
 }
 
 function nextNote() {
@@ -558,6 +694,47 @@ metronomeToggle.addEventListener("change", toggleMetronome);
 metronomeSpeedInput.addEventListener("change", (e) => updateMetronomeSpeed(e.target.value));
 metronomeSpeedInput.addEventListener("input", (e) => updateMetronomeSpeed(e.target.value));
 
+if (rhythmStartToggle) {
+  rhythmStartToggle.addEventListener("change", () => {
+    if (!document.body.classList.contains("mode-rhythm")) {
+      rhythmStartToggle.checked = false;
+      return;
+    }
+    syncRhythmControls();
+    if (rhythmStartToggle.checked) startRhythm();
+    else stopRhythm();
+  });
+}
+if (rhythmBpm) {
+  rhythmBpm.addEventListener("input", () => {
+    syncRhythmControls();
+    restartRhythmIfActive();
+  });
+}
+if (rhythmSignature) {
+  rhythmSignature.addEventListener("change", () => {
+    restartRhythmIfActive();
+  });
+}
+if (rhythmSubdivision) {
+  rhythmSubdivision.addEventListener("change", () => {
+    restartRhythmIfActive();
+  });
+}
+if (rhythmSoundToggle) {
+  rhythmSoundToggle.addEventListener("change", () => {
+    syncRhythmControls();
+  });
+}
+if (rhythmLightToggle) {
+  rhythmLightToggle.addEventListener("change", () => {
+    syncRhythmControls();
+    if (!rhythmState.lightOn) updateRhythmVisual(-1);
+  });
+}
+
 buildBoard();
+syncRhythmControls();
+buildRhythmLights();
 setMode("training");
 updateScaleAndChord();

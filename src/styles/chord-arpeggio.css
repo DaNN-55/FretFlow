@@ -168,6 +168,17 @@ body.chord-arpeggio.mode-training .caged-only {
   display: none;
 }
 
+body.chord-arpeggio.mode-rhythm .training-only,
+body.chord-arpeggio.mode-rhythm .caged-only,
+body.chord-arpeggio.mode-rhythm .training-caged-only {
+  display: none;
+}
+
+body.chord-arpeggio.mode-training .rhythm-only,
+body.chord-arpeggio.mode-caged .rhythm-only {
+  display: none;
+}
+
 body.chord-arpeggio .control-panel-grid {
   display: grid;
   gap: 16px;
@@ -227,6 +238,10 @@ body.chord-arpeggio.mode-caged .caged-only {
 
 body.chord-arpeggio.mode-caged .metronome-group {
   order: 2;
+}
+
+body.chord-arpeggio .rhythm-group {
+  order: 1;
 }
 
 body.chord-arpeggio .control-group {
@@ -382,6 +397,50 @@ body.chord-arpeggio .metronome-speed-value {
 body.chord-arpeggio .fretboard-section {
   display: grid;
   gap: 12px;
+}
+
+body.chord-arpeggio .rhythm-stage {
+  padding: 8px 4px;
+  display: grid;
+  gap: 14px;
+}
+
+body.chord-arpeggio .rhythm-lights {
+  display: grid;
+  grid-template-columns: repeat(var(--rhythm-steps, 16), minmax(18px, 1fr));
+  gap: 8px;
+}
+
+body.chord-arpeggio .rhythm-light {
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #c7dbff;
+  background: #e7f0ff;
+  transition:
+    transform 0.12s ease,
+    background-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+body.chord-arpeggio .rhythm-light.beat {
+  background: #dbeafe;
+}
+
+body.chord-arpeggio .rhythm-light.active {
+  background: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
+  transform: translateY(-1px);
+}
+
+body.chord-arpeggio .rhythm-light.active.accent {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+body.chord-arpeggio .rhythm-step-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.75);
 }
 
 body.chord-arpeggio .section-header h2 {
