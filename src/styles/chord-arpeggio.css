@@ -187,16 +187,38 @@ body.chord-arpeggio .metronome-group {
 }
 
 body.chord-arpeggio .compact-controls {
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  column-gap: 14px;
+  row-gap: 10px;
   align-items: center;
+  justify-content: start;
 }
 
 body.chord-arpeggio .compact-controls .field-inline {
   gap: 8px;
+  min-width: 236px;
+  justify-content: flex-start;
+}
+
+body.chord-arpeggio .compact-controls .field {
+  min-width: auto;
+}
+
+body.chord-arpeggio .compact-controls .field-label {
+  min-width: 34px;
 }
 
 body.chord-arpeggio .compact-controls .switch-box {
   padding: 4px 8px;
+  min-height: 38px;
+}
+
+body.chord-arpeggio .chord-position-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 body.chord-arpeggio.mode-caged .caged-only {
@@ -414,6 +436,16 @@ body.chord-arpeggio .field-label {
   min-width: 48px;
 }
 
+/* Keep "根音/调式" label style consistent with metronome labels */
+body.chord-arpeggio .scale-group .field-label {
+  font-family: "Poppins", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui,
+    sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: rgba(27, 42, 74, 0.7);
+}
+
 body.chord-arpeggio .settings-inline select {
   border-radius: 999px;
   padding: 6px 40px 6px 14px;
@@ -500,6 +532,10 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
 
 .note.arp-muted {
   opacity: 0.35;
+}
+
+.note .degree {
+  display: none;
 }
 
 .note .arp-index {

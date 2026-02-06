@@ -80,6 +80,7 @@ const rootSelect = document.getElementById("rootSelect");
 const scaleSelect = document.getElementById("scaleSelect");
 const scaleToggle = document.getElementById("scaleToggle");
 const chordSelect = document.getElementById("chordSelect");
+const chordPositionSelect = document.getElementById("chordPositionSelect");
 const chordToneToggle = document.getElementById("chordToneToggle");
 const highlightRootToggle = document.getElementById("highlightRootToggle");
 
@@ -100,10 +101,19 @@ const trainingState = {
   arpeggio: false,
   arpeggioDirection: "asc",
   scaleOn: false,
+  chordPosition: 1,
 };
 const cagedState = {
   patterns: [],
   cagedToggle: false,
+};
+
+const chordPositionRanges = {
+  1: [0, 3],
+  2: [2, 6],
+  3: [5, 9],
+  4: [7, 11],
+  5: [9, 13],
 };
 
 const metronomeToggle = document.getElementById("metronomeToggle");
@@ -125,6 +135,23 @@ function getActivePatterns() {
 function isInActivePattern(sIdx, fret, activePatterns) {
   if (activePatterns.length === 0) return true;
   return activePatterns.some((p) => patternRules[p].inPattern(sIdx, fret));
+}
+
+function getActiveChordPosition() {
+  if (!chordPositionSelect) return null;
+  return parseInt(chordPositionSelect.value, 10);
+}
+
+function isInChordPosition(fret, chordPosition) {
+  const range = chordPositionRanges[chordPosition];
+  if (!range) return true;
+  return fret >= range[0] && fret <= range[1];
+}
+
+function setChordPosition(position) {
+  if (chordPositionSelect) {
+    chordPositionSelect.value = String(position);
+  }
 }
 
 function buildBoard() {
@@ -254,6 +281,7 @@ function updateScaleAndChord() {
   const showChordTones = !isCagedMode && chordToneToggle && chordToneToggle.checked;
   const arpeggioMode = !isCagedMode && arpeggioToggle && arpeggioToggle.checked;
   const showCaged = isCagedMode ? cagedToggle.checked : false;
+  const activeChordPosition = getActiveChordPosition();
 
   board.classList.toggle("show-scale", showScale);
   board.classList.toggle("show-chord", showChordTones);
@@ -277,7 +305,11 @@ function updateScaleAndChord() {
 
     const showInScale = isCagedMode
       ? (!showCaged && inPattern && scaleNotes.has(noteName))
-      : (showChordTones || arpeggioMode ? isChord : (showScale && scaleNotes.has(noteName)));
+      : (
+        showChordTones
+          ? (isChord && isInChordPosition(fret, activeChordPosition))
+          : (arpeggioMode ? isChord : (showScale && scaleNotes.has(noteName)))
+      );
     noteEl.classList.toggle("in-scale", showInScale);
     noteEl.classList.toggle("root-note", highlightRoot && noteName === root);
 
@@ -365,6 +397,9 @@ if (arpeggioToggle) arpeggioToggle.addEventListener("change", updateScaleAndChor
 if (arpeggioDirectionSelect) {
   arpeggioDirectionSelect.addEventListener("change", updateScaleAndChord);
 }
+if (chordPositionSelect) {
+  chordPositionSelect.addEventListener("change", updateScaleAndChord);
+}
 
 function setMode(mode) {
   if (mode === currentMode) return;
@@ -379,6 +414,8 @@ function setMode(mode) {
       trainingState.arpeggioDirection = arpeggioDirectionSelect.value;
     }
     if (scaleToggle) trainingState.scaleOn = scaleToggle.checked;
+    const currentChordPos = getActiveChordPosition();
+    if (currentChordPos) trainingState.chordPosition = currentChordPos;
   } else {
     cagedState.patterns = getActivePatterns();
     cagedState.cagedToggle = cagedToggle.checked;
@@ -398,6 +435,7 @@ function setMode(mode) {
   if (scaleToggle) scaleToggle.disabled = trainingDisabled;
   if (chordSelect) chordSelect.disabled = trainingDisabled;
   if (chordToneToggle) chordToneToggle.disabled = trainingDisabled;
+  if (chordPositionSelect) chordPositionSelect.disabled = trainingDisabled;
   if (highlightRootToggle) highlightRootToggle.disabled = trainingDisabled;
   if (arpeggioToggle) arpeggioToggle.disabled = trainingDisabled;
   if (arpeggioDirectionSelect) arpeggioDirectionSelect.disabled = trainingDisabled;
@@ -421,6 +459,7 @@ function setMode(mode) {
     if (scaleToggle) scaleToggle.checked = trainingState.scaleOn;
     if (chordSelect) chordSelect.value = trainingState.chord;
     if (chordToneToggle) chordToneToggle.checked = trainingState.chordTone;
+    setChordPosition(trainingState.chordPosition);
     if (highlightRootToggle) highlightRootToggle.checked = trainingState.highlightRoot;
     if (arpeggioToggle) arpeggioToggle.checked = trainingState.arpeggio;
     if (arpeggioDirectionSelect) {
