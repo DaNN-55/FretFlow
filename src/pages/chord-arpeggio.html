@@ -10,8 +10,8 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap"
     />
-    <link rel="stylesheet" href="../styles/guitartraining.css?v=20260206-1" />
-    <link rel="stylesheet" href="../styles/chord-arpeggio.css?v=20260206-1" />
+    <link rel="stylesheet" href="../styles/guitartraining.css?v=20260208-2" />
+    <link rel="stylesheet" href="../styles/chord-arpeggio.css?v=20260208-2" />
   </head>
   <body class="chord-arpeggio mode-training">
     <div class="page">
@@ -63,116 +63,99 @@
           >
             CAGED 模式
           </button>
-          <button
-            type="button"
-            class="mode-btn"
-            data-mode="rhythm"
-            role="tab"
-            aria-selected="false"
-          >
-            节奏模式
-          </button>
         </div>
         <div class="control-panel-grid">
           <div class="control-group training-only scale-group">
-            <div class="group-title">音阶</div>
+            <div class="group-title">选择模式</div>
             <div class="control-row compact-controls">
-              <label class="field field-inline">
-                <span class="field-label">根音</span>
-                <select id="rootSelect" aria-label="选择根音">
-                  <option value="C">C</option>
-                  <option value="C#">C#</option>
-                  <option value="D">D</option>
-                  <option value="D#">D#</option>
-                  <option value="E">E</option>
-                  <option value="F">F</option>
-                  <option value="F#">F#</option>
-                  <option value="G">G</option>
-                  <option value="G#">G#</option>
-                  <option value="A">A</option>
-                  <option value="A#">A#</option>
-                  <option value="B">B</option>
-                </select>
-              </label>
-              <label class="field field-inline">
-                <span class="field-label">调式</span>
-                <select id="scaleSelect" aria-label="选择音阶调式">
-                  <option value="major">自然大调</option>
-                  <option value="minor">自然小调</option>
-                  <option value="pentatonicMajor">大五声音阶</option>
-                  <option value="pentatonicMinor">小五声音阶</option>
-                </select>
-              </label>
-              <div class="switch-box">
-                <span class="switch-label">音阶显示</span>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="scaleToggle"
-                    aria-label="显示音阶"
-                  />
-                  <span class="slider"></span>
-                </label>
+              <div class="field training-mode-field">
+                <div
+                  class="training-view-toggle"
+                  role="tablist"
+                  aria-label="训练内容选择"
+                >
+                  <button
+                    type="button"
+                    class="training-view-btn"
+                    data-training-view="none"
+                    role="tab"
+                    aria-selected="false"
+                  >
+                    自由
+                  </button>
+                  <button
+                    type="button"
+                    class="training-view-btn active"
+                    data-training-view="scale"
+                    role="tab"
+                    aria-selected="true"
+                  >
+                    音阶
+                  </button>
+                  <button
+                    type="button"
+                    class="training-view-btn"
+                    data-training-view="chord"
+                    role="tab"
+                    aria-selected="false"
+                  >
+                    和弦
+                  </button>
+                </div>
               </div>
-              <label class="field field-inline">
-                <span class="field-label">和弦</span>
-                <select id="chordSelect" aria-label="选择和弦类型">
-                  <option value="majorTriad">大三和弦</option>
-                  <option value="minorTriad">小三和弦</option>
-                  <option value="dominant7">属七和弦</option>
-                  <option value="major7">大七和弦</option>
-                  <option value="minor7">小七和弦</option>
-                </select>
-              </label>
-              <label class="field field-inline">
-                <span class="field-label">把位</span>
-                <select id="chordPositionSelect" aria-label="选择和弦把位">
-                  <option value="1">把位1</option>
-                  <option value="2">把位2</option>
-                  <option value="3">把位3</option>
-                  <option value="4">把位4</option>
-                  <option value="5">把位5</option>
-                </select>
-              </label>
-              <div class="switch-box">
-                <span class="switch-label">和弦标注</span>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="chordToneToggle"
-                    aria-label="显示和弦标注"
-                  />
-                  <span class="slider"></span>
+              <div class="training-option-row">
+                <label class="field" id="rootBox">
+                  <span class="field-label">根音</span>
+                  <select id="rootSelect" aria-label="选择根音">
+                    <option value="C">C</option>
+                    <option value="C#">C#</option>
+                    <option value="D">D</option>
+                    <option value="D#">D#</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="F#">F#</option>
+                    <option value="G">G</option>
+                    <option value="G#">G#</option>
+                    <option value="A">A</option>
+                    <option value="A#">A#</option>
+                    <option value="B">B</option>
+                  </select>
                 </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="control-group metronome-group training-caged-only">
-            <div class="group-title">节拍器</div>
-            <div class="control-row">
-              <div class="metronome-toggle">
-                <label for="metronomeToggle">开启</label>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="metronomeToggle"
-                    aria-label="开启节拍器"
-                  />
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div class="metronome-speed">
-                <label for="metronomeSpeed">速度 (BPM)</label>
-                <input
-                  type="range"
-                  id="metronomeSpeed"
-                  min="40"
-                  max="200"
-                  value="120"
-                />
-                <div class="metronome-speed-value">
-                  <span id="speedValue">120</span> BPM
+                <div id="scaleBox" data-training-field="scale" class="training-row">
+                  <label class="field">
+                    <span class="field-label">调式</span>
+                    <select id="scaleSelect" aria-label="选择音阶调式">
+                      <option value="major">自然大调</option>
+                      <option value="minor">自然小调</option>
+                      <option value="pentatonicMajor">大五声音阶</option>
+                      <option value="pentatonicMinor">小五声音阶</option>
+                      <option value="blues">布鲁斯音阶</option>
+                    </select>
+                  </label>
+                </div>
+                <div id="chordBox" data-training-field="chord" hidden class="training-row">
+                  <label class="field">
+                    <span class="field-label">和弦</span>
+                    <select id="chordSelect" aria-label="选择和弦类型">
+                      <option value="majorTriad">大三和弦</option>
+                      <option value="minorTriad">小三和弦</option>
+                      <option value="sus2">挂二和弦</option>
+                      <option value="sus4">挂四和弦</option>
+                      <option value="dominant7">属七和弦</option>
+                      <option value="major7">大七和弦</option>
+                      <option value="minor7">小七和弦</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">把位</span>
+                    <select id="chordPositionSelect" aria-label="选择和弦把位">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                    </select>
+                  </label>
                 </div>
               </div>
             </div>
@@ -211,70 +194,6 @@
               </div>
             </div>
           </div>
-
-          <div class="control-group rhythm-only rhythm-group">
-            <div class="group-title">节奏设置</div>
-            <div class="control-row compact-controls">
-              <div class="switch-box">
-                <span class="switch-label">开始</span>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="rhythmStartToggle"
-                    aria-label="开始节奏模式"
-                  />
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <label class="field field-inline">
-                <span class="field-label">拍号</span>
-                <select id="rhythmSignature" aria-label="选择拍号">
-                  <option value="4/4">4/4</option>
-                  <option value="3/4">3/4</option>
-                  <option value="6/8">6/8</option>
-                </select>
-              </label>
-              <label class="field field-inline">
-                <span class="field-label">细分</span>
-                <select id="rhythmSubdivision" aria-label="选择细分">
-                  <option value="quarter">四分</option>
-                  <option value="eighth">八分</option>
-                  <option value="sixteenth">十六分</option>
-                </select>
-              </label>
-              <div class="switch-box">
-                <span class="switch-label">声音提示</span>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="rhythmSoundToggle"
-                    aria-label="开启声音提示"
-                    checked
-                  />
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div class="switch-box">
-                <span class="switch-label">亮灯提示</span>
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    id="rhythmLightToggle"
-                    aria-label="开启亮灯提示"
-                    checked
-                  />
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div class="metronome-speed">
-                <label for="rhythmBpm">速度 (BPM)</label>
-                <input type="range" id="rhythmBpm" min="40" max="200" value="90" />
-                <div class="metronome-speed-value">
-                  <span id="rhythmBpmValue">90</span> BPM
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -283,6 +202,9 @@
         id="trainingFretboardSection"
       >
         <div class="fretboard-shell" id="fretboardShell">
+          <div class="training-toast" id="trainingToast">
+            点击任意品位即可发声；切换不同模式可学习音阶与和弦分布。
+          </div>
           <div class="fretboard-wrapper">
             <div id="fretboard" class="fretboard"></div>
             <div id="fretNumbers" class="fret-numbers"></div>
@@ -293,17 +215,43 @@
       <section class="fretboard-section caged-only" id="cagedFretboardSection">
         <div id="cagedFretboardMount"></div>
       </section>
-
-      <section class="fretboard-section rhythm-only" id="rhythmSection">
-        <div class="fretboard-shell">
-          <div class="rhythm-stage">
-            <div class="rhythm-lights" id="rhythmLights"></div>
-            <div class="rhythm-step-label" id="rhythmStepLabel">准备开始</div>
-          </div>
-        </div>
-      </section>
     </div>
 
-    <script src="../chord-arpeggio.js?v=20260206-1"></script>
+    <aside class="fixed-metronome" aria-label="全局节拍器">
+      <div class="fixed-metronome-title">节拍器</div>
+      <div class="metronome-toggle">
+        <label for="metronomeToggle">开启</label>
+        <label class="switch">
+          <input type="checkbox" id="metronomeToggle" aria-label="开启节拍器" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="metronome-signature-control">
+        <label for="metronomeSignature">拍号</label>
+        <select id="metronomeSignature" aria-label="选择拍号">
+          <option value="2/4">2/4</option>
+          <option value="3/4">3/4</option>
+          <option value="4/4" selected>4/4</option>
+          <option value="5/4">5/4</option>
+          <option value="6/4">6/4</option>
+        </select>
+      </div>
+      <div class="metronome-speed">
+        <label for="metronomeSpeed">速度 (BPM)</label>
+        <input
+          type="range"
+          id="metronomeSpeed"
+          min="40"
+          max="200"
+          value="120"
+        />
+      </div>
+      <div class="metronome-speed-value">
+        <span id="speedValue">120</span> BPM
+      </div>
+      <div class="metronome-light-row" aria-hidden="true"></div>
+    </aside>
+
+    <script src="../chord-arpeggio.js?v=20260208-2"></script>
   </body>
 </html>

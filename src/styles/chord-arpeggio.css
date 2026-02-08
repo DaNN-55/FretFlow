@@ -168,17 +168,6 @@ body.chord-arpeggio.mode-training .caged-only {
   display: none;
 }
 
-body.chord-arpeggio.mode-rhythm .training-only,
-body.chord-arpeggio.mode-rhythm .caged-only,
-body.chord-arpeggio.mode-rhythm .training-caged-only {
-  display: none;
-}
-
-body.chord-arpeggio.mode-training .rhythm-only,
-body.chord-arpeggio.mode-caged .rhythm-only {
-  display: none;
-}
-
 body.chord-arpeggio .control-panel-grid {
   display: grid;
   gap: 16px;
@@ -193,31 +182,86 @@ body.chord-arpeggio .scale-group {
   order: 1;
 }
 
+body.chord-arpeggio.mode-training .scale-group {
+  grid-column: 1 / -1;
+}
+
 body.chord-arpeggio .metronome-group {
   order: 2;
 }
 
 body.chord-arpeggio .compact-controls {
-  display: grid;
-  grid-template-columns: repeat(3, max-content);
-  column-gap: 14px;
-  row-gap: 10px;
-  align-items: center;
-  justify-content: start;
-}
-
-body.chord-arpeggio .compact-controls .field-inline {
-  gap: 8px;
-  min-width: 236px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
 }
 
-body.chord-arpeggio .compact-controls .field {
-  min-width: auto;
+body.chord-arpeggio .training-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border: 2px solid #c7dbff;
+  border-radius: 999px;
+  background: #e7f0ff;
 }
 
-body.chord-arpeggio .compact-controls .field-label {
-  min-width: 34px;
+body.chord-arpeggio .training-view-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: transparent;
+  color: rgba(27, 42, 74, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+body.chord-arpeggio .training-view-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+body.chord-arpeggio .training-mode-field {
+  width: max-content;
+  min-width: 0;
+  align-self: flex-start;
+}
+
+body.chord-arpeggio .training-option-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+body.chord-arpeggio .training-option-row .field {
+  min-width: 150px;
+  max-width: 180px;
+}
+
+body.chord-arpeggio .training-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+body.chord-arpeggio .training-row.is-inactive .field-label {
+  color: rgba(27, 42, 74, 0.42);
+}
+
+body.chord-arpeggio .training-view-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 body.chord-arpeggio .compact-controls .switch-box {
@@ -238,10 +282,6 @@ body.chord-arpeggio.mode-caged .caged-only {
 
 body.chord-arpeggio.mode-caged .metronome-group {
   order: 2;
-}
-
-body.chord-arpeggio .rhythm-group {
-  order: 1;
 }
 
 body.chord-arpeggio .control-group {
@@ -343,6 +383,26 @@ body.chord-arpeggio .control-row select {
   box-shadow: none;
 }
 
+body.chord-arpeggio .control-row select:disabled {
+  background-color: #eef2f8;
+  border-color: #d5ddea;
+  color: rgba(27, 42, 74, 0.48);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+
+body.chord-arpeggio .control-row select:disabled:hover,
+body.chord-arpeggio .control-row select:disabled:focus,
+body.chord-arpeggio .control-row select:disabled:active {
+  background-color: #eef2f8;
+  border-color: #d5ddea;
+  color: rgba(27, 42, 74, 0.48);
+  box-shadow: none;
+  transform: none;
+}
+
 body.chord-arpeggio select option {
   color: #1b2a4a;
 }
@@ -379,6 +439,7 @@ body.chord-arpeggio .metronome-speed {
   flex-wrap: wrap;
 }
 
+body.chord-arpeggio .metronome-signature-control label,
 body.chord-arpeggio .metronome-toggle label,
 body.chord-arpeggio .metronome-speed label {
   font-size: 12px;
@@ -394,53 +455,105 @@ body.chord-arpeggio .metronome-speed-value {
   color: #1d4ed8;
 }
 
+body.chord-arpeggio .fixed-metronome {
+  position: fixed;
+  right: 18px;
+  top: 120px;
+  z-index: 40;
+  width: 220px;
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 10px;
+  background: #ffffff;
+  border: 2px solid #c7dbff;
+  border-radius: 16px;
+  box-shadow:
+    0 16px 28px rgba(37, 99, 235, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.chord-arpeggio .fixed-metronome-title {
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+body.chord-arpeggio .metronome-signature-control,
+body.chord-arpeggio .fixed-metronome .metronome-toggle,
+body.chord-arpeggio .fixed-metronome .metronome-speed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+body.chord-arpeggio .fixed-metronome .metronome-speed input[type="range"] {
+  width: 112px;
+}
+
+body.chord-arpeggio .fixed-metronome .metronome-signature-control select {
+  width: 112px;
+}
+
+body.chord-arpeggio .fixed-metronome .metronome-speed-value {
+  text-align: right;
+  min-width: auto;
+}
+
+body.chord-arpeggio .metronome-light-row {
+  display: grid;
+  grid-template-columns: repeat(var(--beat-count, 4), 1fr);
+  gap: 6px;
+}
+
+body.chord-arpeggio .metronome-light {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 6px;
+  border: 1px solid #c7dbff;
+  background: #e7f0ff;
+  transition:
+    background-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+body.chord-arpeggio .metronome-light.active {
+  background: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
+}
+
+body.chord-arpeggio .metronome-light.accent.active {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
 body.chord-arpeggio .fretboard-section {
   display: grid;
   gap: 12px;
 }
 
-body.chord-arpeggio .rhythm-stage {
-  padding: 8px 4px;
-  display: grid;
-  gap: 14px;
-}
-
-body.chord-arpeggio .rhythm-lights {
-  display: grid;
-  grid-template-columns: repeat(var(--rhythm-steps, 16), minmax(18px, 1fr));
-  gap: 8px;
-}
-
-body.chord-arpeggio .rhythm-light {
-  height: 18px;
-  border-radius: 999px;
-  border: 1px solid #c7dbff;
-  background: #e7f0ff;
-  transition:
-    transform 0.12s ease,
-    background-color 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-body.chord-arpeggio .rhythm-light.beat {
-  background: #dbeafe;
-}
-
-body.chord-arpeggio .rhythm-light.active {
-  background: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
-  transform: translateY(-1px);
-}
-
-body.chord-arpeggio .rhythm-light.active.accent {
-  background: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-}
-
-body.chord-arpeggio .rhythm-step-label {
+body.chord-arpeggio .training-toast {
+  margin-bottom: 12px;
+  border: 2px solid #c7dbff;
+  border-radius: 14px;
+  background: #f5f9ff;
+  color: rgba(27, 42, 74, 0.82);
   font-size: 13px;
-  font-weight: 700;
-  color: rgba(27, 42, 74, 0.75);
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+body.chord-arpeggio .training-toast .toast-note {
+  font-size: inherit;
+  font-weight: inherit;
+  color: #d9480f;
+  margin-right: 8px;
+}
+
+body.chord-arpeggio .training-toast .toast-meta {
+  color: rgba(27, 42, 74, 0.78);
+  font-size: 13px;
 }
 
 body.chord-arpeggio .section-header h2 {
@@ -563,6 +676,24 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
   body.chord-arpeggio .hero-card {
     order: -1;
   }
+
+  body.chord-arpeggio .fixed-metronome {
+    position: static;
+    width: 100%;
+  }
+
+  body.chord-arpeggio .page {
+    gap: 16px;
+  }
+
+  body.chord-arpeggio .compact-controls {
+    align-items: stretch;
+  }
+
+  body.chord-arpeggio .training-option-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 }
 
 @media (max-width: 700px) {
@@ -589,6 +720,13 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
 }
 
+.note.hit-preview {
+  display: flex !important;
+  background: #60a5fa;
+  color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+}
+
 .note.arp-muted {
   opacity: 0.35;
 }
@@ -598,6 +736,7 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
 }
 
 .note .arp-index {
+  display: none;
   position: absolute;
   top: -8px;
   right: -8px;
@@ -608,4 +747,8 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
   font-size: 9px;
   font-weight: 700;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.note .arp-index:not(:empty) {
+  display: block;
 }
