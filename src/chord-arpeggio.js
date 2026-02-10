@@ -82,6 +82,44 @@ const patternRules = {
   },
 };
 
+const flatToSharpMap = {
+  Db: "C#",
+  Eb: "D#",
+  Gb: "F#",
+  Ab: "G#",
+  Bb: "A#",
+};
+
+const circleData = [
+  { major: "C", minor: "Am", dim: "Bdim" },
+  { major: "G", minor: "Em", dim: "F#dim" },
+  { major: "D", minor: "Bm", dim: "C#dim" },
+  { major: "A", minor: "F#m", dim: "G#dim" },
+  { major: "E", minor: "C#m", dim: "D#dim" },
+  { major: "B", minor: "G#m", dim: "A#dim" },
+  { major: "Gb", minor: "Ebm", dim: "Fdim" },
+  { major: "Db", minor: "Bbm", dim: "Cdim" },
+  { major: "Ab", minor: "Fm", dim: "Gdim" },
+  { major: "Eb", minor: "Cm", dim: "Ddim" },
+  { major: "Bb", minor: "Gm", dim: "Adim" },
+  { major: "F", minor: "Dm", dim: "Edim" },
+];
+
+const circleOuterColors = [
+  "#e7c8c8",
+  "#eecfb2",
+  "#e8d8b8",
+  "#ecd277",
+  "#7dcf12",
+  "#82d0a2",
+  "#b3d4d2",
+  "#accfda",
+  "#bcc9de",
+  "#c6c4de",
+  "#cec5e1",
+  "#c7b6e0",
+];
+
 const rootSelect = document.getElementById("rootSelect");
 const scaleSelect = document.getElementById("scaleSelect");
 const chordSelect = document.getElementById("chordSelect");
@@ -104,6 +142,16 @@ const cagedToggle = document.getElementById("cagedToggle");
 const arpeggioToggle = document.getElementById("arpeggioToggle");
 const arpeggioDirectionSelect = document.getElementById("arpeggioDirection");
 const modeButtons = Array.from(document.querySelectorAll(".mode-btn"));
+const circleWheel = document.getElementById("circleWheel");
+const circlePrevBtn = document.getElementById("circlePrevBtn");
+const circleNextBtn = document.getElementById("circleNextBtn");
+const circleCurrentKey = document.getElementById("circleCurrentKey");
+const circleToast = document.getElementById("circleToast");
+const gtpUpload = document.getElementById("gtpUpload");
+const phraseList = document.getElementById("phraseList");
+const topTabButtons = Array.from(document.querySelectorAll("[data-top-tab]"));
+const trainingTabPanel = document.getElementById("trainingTabPanel");
+const phraseTabPanel = document.getElementById("phraseTabPanel");
 
 let currentMode = "training";
 const trainingState = {
@@ -120,6 +168,12 @@ const cagedState = {
   patterns: [],
   cagedToggle: false,
 };
+const circleState = {
+  startIndex: 0,
+  selectedMajorIndex: null,
+};
+const phraseDemoItems = [];
+let currentTopTab = "training";
 
 const chordPositionRanges = {
   1: [0, 3],
@@ -134,6 +188,8 @@ const metronomeSpeedInput = document.getElementById("metronomeSpeed");
 const metronomeSpeedValue = document.getElementById("speedValue");
 const metronomeSignatureSelect = document.getElementById("metronomeSignature");
 const metronomeLightRow = document.querySelector(".metronome-light-row");
+const metronomeCollapseBtn = document.getElementById("metronomeCollapseBtn");
+const fixedMetronome = document.querySelector(".fixed-metronome");
 let metronomeLights = [];
 const fretboardShell = document.getElementById("fretboardShell");
 const trainingFretboardSection = document.getElementById(
@@ -277,6 +333,38 @@ function playTrainingTone(midi, duration = 0.6, when = 0) {
   osc2.start(t0);
   osc.stop(t0 + duration + 0.02);
   osc2.stop(t0 + duration + 0.02);
+}
+
+function playChordByLabel(chordLabel) {
+  if (!chordLabel) return;
+
+  unlockTrainingAudio();
+  const normalized = chordLabel.replace("°", "dim").trim();
+  let quality = "major";
+  let root = normalized;
+
+  if (normalized.endsWith("dim")) {
+    quality = "dim";
+    root = normalized.slice(0, -3);
+  } else if (normalized.endsWith("m")) {
+    quality = "minor";
+    root = normalized.slice(0, -1);
+  }
+
+  const sharpRoot = flatToSharpMap[root] || root;
+  const rootIndex = chromaticScale.indexOf(sharpRoot);
+  if (rootIndex < 0) return;
+
+  const intervals =
+    quality === "minor" ? [0, 3, 7] : quality === "dim" ? [0, 3, 6] : [0, 4, 7];
+  const baseMidi = 48 + rootIndex;
+  intervals.forEach((interval, idx) => {
+    playTrainingTone(baseMidi + interval, 0.9, idx * 0.02);
+  });
+
+  if (circleToast) {
+    circleToast.textContent = `已播放和弦: ${chordLabel}`;
+  }
 }
 
 function updateTrainingToast(message, allowHtml = false) {
@@ -589,6 +677,178 @@ function toggleCaged() {
   updateScaleAndChord();
 }
 
+function buildCircleWheel() {
+  if (!circleWheel) return;
+  circleWheel.innerHTML = "";
+
+  const innerRing = document.createElement("div");
+  innerRing.className = "circle-inner-ring";
+  circleWheel.appendChild(innerRing);
+
+  const minorLayer = document.createElement("div");
+  minorLayer.className = "circle-label-layer minor-layer";
+  circleWheel.appendChild(minorLayer);
+
+  const majorLayer = document.createElement("div");
+  majorLayer.className = "circle-label-layer major-layer";
+  circleWheel.appendChild(majorLayer);
+
+  circleData.forEach((item, idx) => {
+    const majorLabel = document.createElement("span");
+    majorLabel.className = "circle-chord major circle-card";
+    majorLabel.textContent = item.major;
+    majorLabel.dataset.index = String(idx);
+    const minorLabel = document.createElement("span");
+    minorLabel.className = "circle-chord minor circle-card";
+    minorLabel.textContent = item.minor;
+    minorLabel.dataset.index = String(idx);
+
+    const deg = idx * 30 - 90;
+    const rad = (deg * Math.PI) / 180;
+    const majorRadius = 42;
+    const minorRadius = 24;
+    const majorX = 50 + Math.cos(rad) * majorRadius;
+    const majorY = 50 + Math.sin(rad) * majorRadius;
+    const minorX = 50 + Math.cos(rad) * minorRadius;
+    const minorY = 50 + Math.sin(rad) * minorRadius;
+
+    majorLabel.style.left = `${majorX}%`;
+    majorLabel.style.top = `${majorY}%`;
+    minorLabel.style.left = `${minorX}%`;
+    minorLabel.style.top = `${minorY}%`;
+
+    majorLabel.addEventListener("click", () => {
+      circleState.selectedMajorIndex = idx;
+      applyCircleHighlights(idx);
+      const selected = circleData[idx];
+      if (circleCurrentKey) {
+        circleCurrentKey.textContent = `当前主音: ${selected.major} / ${selected.minor}`;
+      }
+    });
+
+    majorLayer.appendChild(majorLabel);
+    minorLayer.appendChild(minorLabel);
+  });
+
+  const center = document.createElement("div");
+  center.className = "circle-center";
+  circleWheel.appendChild(center);
+
+  applyCircleHighlights(circleState.selectedMajorIndex);
+}
+
+function updateCircleWindow() {
+  if (!circleWheel) return;
+  const activeIdx =
+    circleState.selectedMajorIndex == null
+      ? circleState.startIndex
+      : circleState.selectedMajorIndex;
+  const center = circleData[activeIdx];
+  if (circleCurrentKey) {
+    circleCurrentKey.textContent = `当前主音: ${center.major} / ${center.minor}`;
+  }
+}
+
+function shiftCircleWindow(step) {
+  circleState.startIndex =
+    (circleState.startIndex + step + circleData.length) % circleData.length;
+  buildCircleWheel();
+  updateCircleWindow();
+}
+
+function applyCircleHighlights(centerIdx) {
+  if (!circleWheel) return;
+  const majorEls = Array.from(
+    circleWheel.querySelectorAll(".major-layer .circle-chord.major"),
+  );
+  const minorEls = Array.from(
+    circleWheel.querySelectorAll(".minor-layer .circle-chord.minor"),
+  );
+  majorEls.forEach((el) => el.classList.remove("is-highlight"));
+  minorEls.forEach((el) => el.classList.remove("is-highlight"));
+
+  if (centerIdx == null) return;
+  const prevIdx = (centerIdx - 1 + circleData.length) % circleData.length;
+  const nextIdx = (centerIdx + 1) % circleData.length;
+  const targets = new Set([centerIdx, prevIdx, nextIdx]);
+
+  majorEls.forEach((el) => {
+    const idx = parseInt(el.dataset.index, 10);
+    if (targets.has(idx)) el.classList.add("is-highlight");
+  });
+  minorEls.forEach((el) => {
+    const idx = parseInt(el.dataset.index, 10);
+    if (targets.has(idx)) el.classList.add("is-highlight");
+  });
+}
+
+function renderPhraseLibrary() {
+  if (!phraseList) return;
+  phraseList.innerHTML = "";
+
+  if (phraseDemoItems.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "phrase-item placeholder";
+    empty.textContent = "暂无上传文件";
+    phraseList.appendChild(empty);
+    return;
+  }
+
+  phraseDemoItems.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "phrase-item";
+
+    const name = document.createElement("div");
+    name.className = "phrase-name";
+    name.textContent = item.name;
+
+    const meta = document.createElement("div");
+    meta.className = "phrase-meta";
+    meta.textContent = `${item.sizeKB} KB · ${item.uploadedAt} · 待解析（Demo）`;
+
+    row.appendChild(name);
+    row.appendChild(meta);
+    phraseList.appendChild(row);
+  });
+}
+
+function handlePhraseUpload(event) {
+  const files = Array.from(event.target.files || []);
+  if (files.length === 0) return;
+
+  files.forEach((file) => {
+    phraseDemoItems.unshift({
+      name: file.name,
+      sizeKB: (file.size / 1024).toFixed(1),
+      uploadedAt: new Date().toLocaleString("zh-CN", { hour12: false }),
+    });
+  });
+
+  renderPhraseLibrary();
+  event.target.value = "";
+}
+
+function setTopTab(tab) {
+  const nextTab = tab === "phrase" ? "phrase" : "training";
+  currentTopTab = nextTab;
+
+  topTabButtons.forEach((btn) => {
+    const isActive = btn.dataset.topTab === nextTab;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", String(isActive));
+  });
+
+  if (trainingTabPanel) {
+    trainingTabPanel.classList.toggle("active", nextTab === "training");
+  }
+  if (phraseTabPanel) {
+    phraseTabPanel.classList.toggle("active", nextTab === "phrase");
+  }
+
+  document.body.classList.toggle("tab-training", nextTab === "training");
+  document.body.classList.toggle("tab-phrase", nextTab === "phrase");
+}
+
 patternButtons.forEach((btn) => {
   btn.addEventListener("click", () => togglePattern(btn.dataset.pattern, btn));
 });
@@ -614,6 +874,19 @@ trainingViewButtons.forEach((btn) => {
   });
 });
 
+if (circlePrevBtn) {
+  circlePrevBtn.addEventListener("click", () => shiftCircleWindow(-1));
+}
+if (circleNextBtn) {
+  circleNextBtn.addEventListener("click", () => shiftCircleWindow(1));
+}
+if (gtpUpload) {
+  gtpUpload.addEventListener("change", handlePhraseUpload);
+}
+topTabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => setTopTab(btn.dataset.topTab));
+});
+
 function setMode(mode) {
   if (mode === currentMode) return;
   if (currentMode === "training") {
@@ -636,6 +909,7 @@ function setMode(mode) {
 
   document.body.classList.toggle("mode-training", mode === "training");
   document.body.classList.toggle("mode-caged", mode === "caged");
+  document.body.classList.toggle("mode-circle", mode === "circle");
   modeButtons.forEach((btn) => {
     const isActive = btn.dataset.mode === mode;
     btn.classList.toggle("active", isActive);
@@ -652,6 +926,8 @@ function setMode(mode) {
     btn.disabled = mode !== "caged";
   });
   cagedToggle.disabled = mode !== "caged";
+  if (circlePrevBtn) circlePrevBtn.disabled = mode !== "circle";
+  if (circleNextBtn) circleNextBtn.disabled = mode !== "circle";
 
   if (mode === "caged") {
     rootSelect.value = "C";
@@ -686,6 +962,13 @@ function setMode(mode) {
       "点击任意品位即可发声；切换“高亮模式”可学习音阶与和弦分布。",
     );
     resetBoardVisuals();
+  } else if (mode === "circle") {
+    resetBoardVisuals();
+    updateCircleWindow();
+    if (circleToast) {
+      circleToast.textContent =
+        "点击五度圈中的和弦可试听和弦音；使用“向左/向右切换”移动五度圈窗口。";
+    }
   } else {
     resetBoardVisuals();
   }
@@ -817,6 +1100,17 @@ function updateMetronomeSpeed(value) {
   metronomeSpeedValue.innerText = value;
 }
 
+function setMetronomeCollapsed(collapsed) {
+  if (!fixedMetronome || !metronomeCollapseBtn) return;
+  fixedMetronome.classList.toggle("is-collapsed", collapsed);
+  metronomeCollapseBtn.textContent = collapsed ? "<" : ">";
+  metronomeCollapseBtn.setAttribute(
+    "aria-label",
+    collapsed ? "展开节拍器" : "收起节拍器",
+  );
+  metronomeCollapseBtn.setAttribute("aria-expanded", String(!collapsed));
+}
+
 metronomeToggle.addEventListener("change", toggleMetronome);
 metronomeSpeedInput.addEventListener("change", (e) =>
   updateMetronomeSpeed(e.target.value),
@@ -833,7 +1127,20 @@ if (metronomeSignatureSelect) {
   renderMetronomeLights();
 }
 
+if (metronomeCollapseBtn && fixedMetronome) {
+  let collapsed = false;
+  setMetronomeCollapsed(collapsed);
+  metronomeCollapseBtn.addEventListener("click", () => {
+    collapsed = !collapsed;
+    setMetronomeCollapsed(collapsed);
+  });
+}
+
 buildBoard();
+buildCircleWheel();
+updateCircleWindow();
+renderPhraseLibrary();
+setTopTab("training");
 setTrainingView(getTrainingView());
 setMode("training");
 updateScaleAndChord();

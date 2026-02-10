@@ -130,6 +130,46 @@ body.chord-arpeggio .control-panel {
   gap: 16px;
 }
 
+body.chord-arpeggio .top-tabs {
+  display: inline-flex;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #e7f0ff;
+  border: 2px solid #c7dbff;
+  box-shadow:
+    0 10px 18px rgba(37, 99, 235, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  width: max-content;
+}
+
+body.chord-arpeggio .top-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.72);
+  cursor: pointer;
+}
+
+body.chord-arpeggio .top-tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+body.chord-arpeggio .tab-panel {
+  display: none;
+}
+
+body.chord-arpeggio .tab-panel.active {
+  display: block;
+}
+
+body.chord-arpeggio.tab-phrase .fixed-metronome {
+  display: none;
+}
+
 body.chord-arpeggio .mode-toggle {
   display: inline-flex;
   gap: 10px;
@@ -166,6 +206,24 @@ body.chord-arpeggio .mode-btn.active {
 body.chord-arpeggio.mode-caged .training-only,
 body.chord-arpeggio.mode-training .caged-only {
   display: none;
+}
+
+body.chord-arpeggio .control-group.circle-only,
+body.chord-arpeggio .fretboard-section.circle-only {
+  display: none;
+}
+
+body.chord-arpeggio.mode-circle .training-only,
+body.chord-arpeggio.mode-circle .caged-only {
+  display: none;
+}
+
+body.chord-arpeggio.mode-circle .control-group.circle-only {
+  display: flex;
+}
+
+body.chord-arpeggio.mode-circle .fretboard-section.circle-only {
+  display: grid;
 }
 
 body.chord-arpeggio .control-panel-grid {
@@ -470,12 +528,60 @@ body.chord-arpeggio .fixed-metronome {
   box-shadow:
     0 16px 28px rgba(37, 99, 235, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease;
 }
 
 body.chord-arpeggio .fixed-metronome-title {
   font-family: "Righteous", "Poppins", sans-serif;
   font-size: 13px;
   letter-spacing: 0.3px;
+}
+
+body.chord-arpeggio .metronome-collapse-btn {
+  position: absolute;
+  left: -20px;
+  top: 12px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: none;
+  filter: drop-shadow(0 4px 8px rgba(37, 99, 235, 0.55));
+  padding: 0;
+  z-index: 2;
+}
+
+body.chord-arpeggio .fixed-metronome.is-collapsed {
+  transform: translateX(calc(100% + 28px));
+  overflow: visible;
+}
+
+body.chord-arpeggio .fixed-metronome > :not(.metronome-collapse-btn) {
+  transition: opacity 0.16s ease;
+}
+
+body.chord-arpeggio .fixed-metronome.is-collapsed > :not(.metronome-collapse-btn) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.chord-arpeggio .fixed-metronome.is-collapsed .metronome-collapse-btn {
+  left: -40px;
+  top: 12px;
+  width: 18px;
+  height: 18px;
+  font-size: 22px;
+  box-shadow: none;
+  filter: drop-shadow(0 4px 9px rgba(37, 99, 235, 0.6));
 }
 
 body.chord-arpeggio .metronome-signature-control,
@@ -608,7 +714,7 @@ body.chord-arpeggio .field-label {
   min-width: 48px;
 }
 
-/* Keep "根音/调式" label style consistent with metronome labels */
+/* Keep "鏍归煶/璋冨紡" label style consistent with metronome labels */
 body.chord-arpeggio .scale-group .field-label {
   font-family: "Poppins", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui,
     sans-serif;
@@ -649,6 +755,235 @@ body.chord-arpeggio .fretboard-wrapper {
   border: 2px solid #c7dbff;
 }
 
+body.chord-arpeggio .circle-shift-row button {
+  background: #ffffff;
+  color: #1b2a4a;
+  border: 2px solid #c7dbff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+body.chord-arpeggio .circle-current-key {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+body.chord-arpeggio .circle-shell {
+  display: grid;
+  place-items: center;
+  padding: 12px 4px 6px;
+}
+
+body.chord-arpeggio .circle-wheel {
+  width: min(640px, 100%);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #b9d1fb;
+  background:
+    conic-gradient(
+      from -105deg,
+      #e7c8c8 0 30deg,
+      #eecfb2 30deg 60deg,
+      #e8d8b8 60deg 90deg,
+      #ecd277 90deg 120deg,
+      #7dcf12 120deg 150deg,
+      #82d0a2 150deg 180deg,
+      #b3d4d2 180deg 210deg,
+      #accfda 210deg 240deg,
+      #bcc9de 240deg 270deg,
+      #c6c4de 270deg 300deg,
+      #cec5e1 300deg 330deg,
+      #c7b6e0 330deg 360deg
+    );
+}
+
+body.chord-arpeggio .circle-inner-ring {
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from -105deg,
+      #ece3e3 0 30deg,
+      #eee8df 30deg 60deg,
+      #ebe5da 60deg 90deg,
+      #ece6d5 90deg 120deg,
+      #dde6d4 120deg 150deg,
+      #d6e5d9 150deg 180deg,
+      #d5e2df 180deg 210deg,
+      #d4dfe3 210deg 240deg,
+      #d8dde5 240deg 270deg,
+      #dcdbe6 270deg 300deg,
+      #e1dce8 300deg 330deg,
+      #e3dce8 330deg 360deg
+    );
+  border: 2px solid rgba(245, 249, 255, 0.95);
+  z-index: 1;
+}
+
+body.chord-arpeggio .circle-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    from -105deg,
+    transparent 0 29.3deg,
+    rgba(248, 251, 255, 0.96) 29.3deg 30deg
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+body.chord-arpeggio .circle-label-layer {
+  position: absolute;
+  inset: 0;
+}
+
+body.chord-arpeggio .circle-label-layer.minor-layer {
+  z-index: 10;
+}
+
+body.chord-arpeggio .circle-label-layer.major-layer {
+  z-index: 11;
+}
+
+body.chord-arpeggio .circle-wheel .circle-chord {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: none;
+  background: transparent;
+  min-width: 40px;
+  font-weight: 700;
+  cursor: default;
+  text-align: center;
+  opacity: 1;
+  z-index: 10;
+  display: block;
+}
+
+body.chord-arpeggio .circle-wheel .circle-chord.major {
+  color: #111111;
+  font-size: clamp(18px, 2.2vw, 30px);
+  letter-spacing: 0.4px;
+}
+
+body.chord-arpeggio .circle-wheel .circle-chord.minor {
+  color: #111111;
+  font-size: clamp(12px, 1.3vw, 18px);
+}
+
+body.chord-arpeggio .circle-wheel .circle-card {
+  border: 1px solid rgba(169, 192, 238, 0.85);
+  border-radius: 8px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+  cursor: pointer;
+}
+
+body.chord-arpeggio .circle-wheel .minor-layer .circle-card {
+  background: rgba(255, 255, 255, 0.76);
+}
+
+body.chord-arpeggio .circle-wheel .circle-card.is-highlight {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #1d4ed8;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+}
+
+body.chord-arpeggio .circle-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 34%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: #f3f7fd;
+  border: 1px solid #d5e2f9;
+  z-index: 1;
+}
+
+body.chord-arpeggio .circle-shift-row {
+  display: none;
+}
+
+body.chord-arpeggio .phrase-library-demo {
+  background: #ffffff;
+  border: 2px solid #c7dbff;
+  border-radius: 20px;
+  padding: 16px;
+  gap: 12px;
+  box-shadow:
+    0 12px 20px rgba(37, 99, 235, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.chord-arpeggio .phrase-library-demo.tab-panel {
+  display: none;
+}
+
+body.chord-arpeggio .phrase-library-demo.tab-panel.active {
+  display: grid;
+}
+
+body.chord-arpeggio .phrase-library-head h2 {
+  margin: 0;
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 18px;
+}
+
+body.chord-arpeggio .phrase-library-head p {
+  margin: 6px 0 0;
+  color: rgba(27, 42, 74, 0.7);
+  font-size: 13px;
+}
+
+body.chord-arpeggio .phrase-uploader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+body.chord-arpeggio .phrase-uploader label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.chord-arpeggio .phrase-list {
+  display: grid;
+  gap: 8px;
+}
+
+body.chord-arpeggio .phrase-item {
+  background: #f5f9ff;
+  border: 1px solid #c7dbff;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+body.chord-arpeggio .phrase-item.placeholder {
+  color: rgba(27, 42, 74, 0.62);
+}
+
+body.chord-arpeggio .phrase-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1b2a4a;
+}
+
+body.chord-arpeggio .phrase-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(27, 42, 74, 0.64);
+}
+
 body.chord-arpeggio .fretboard {
   border-color: #c7dbff;
 }
@@ -680,6 +1015,11 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
   body.chord-arpeggio .fixed-metronome {
     position: static;
     width: 100%;
+    transform: none !important;
+  }
+
+  body.chord-arpeggio .metronome-collapse-btn {
+    display: none;
   }
 
   body.chord-arpeggio .page {
@@ -703,6 +1043,10 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
 
   body.chord-arpeggio .control-panel-grid {
     grid-template-columns: 1fr;
+  }
+
+  body.chord-arpeggio .circle-wheel {
+    width: min(420px, 100%);
   }
 }
 
