@@ -397,7 +397,7 @@ function playTrainingTone(midi, duration = 0.6, when = 0) {
   osc2.stop(t0 + duration + 0.02);
 }
 
-function playChordByLabel(chordLabel) {
+function playChordByLabel(chordLabel, whenOffset = 0) {
   if (!chordLabel) return;
 
   unlockTrainingAudio();
@@ -421,9 +421,29 @@ function playChordByLabel(chordLabel) {
     quality === "minor" ? [0, 3, 7] : quality === "dim" ? [0, 3, 6] : [0, 4, 7];
   const baseMidi = 48 + rootIndex;
   intervals.forEach((interval, idx) => {
-    playTrainingTone(baseMidi + interval, 0.9, idx * 0.02);
+    playTrainingTone(baseMidi + interval, 0.9, whenOffset + idx * 0.02);
   });
 
+}
+
+function playProgressionByLabel(progressionLabel) {
+  if (!progressionLabel) return;
+  const chords = progressionLabel
+    .split("-")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const chordGap = 0.52;
+  chords.forEach((chord, idx) => {
+    playChordByLabel(chord, idx * chordGap);
+  });
+}
+
+function flashPlaybackFeedback(target) {
+  if (!target) return;
+  target.classList.add("is-playing");
+  window.setTimeout(() => {
+    target.classList.remove("is-playing");
+  }, 220);
 }
 
 function updateTrainingToast(message, allowHtml = false) {
@@ -930,6 +950,7 @@ function buildCircle() {
   if (!circleWheel) return;
   circleWheel.innerHTML = "";
   circleState.nodes = [];
+  const segmentNodes = [];
 
   const ringLayer = createSvgElement("g", { class: "circle-ring-layer" });
   for (let idx = 0; idx < keysMajor.length; idx += 1) {
@@ -958,6 +979,7 @@ function buildCircle() {
     });
     ringLayer.appendChild(outerSegment);
     ringLayer.appendChild(innerSegment);
+    segmentNodes.push({ outerSegment, innerSegment });
   }
   circleWheel.appendChild(ringLayer);
 
@@ -989,7 +1011,12 @@ function buildCircle() {
       circleConfig.pillMinorWidth,
       keyLayer,
     );
-    circleState.nodes.push({ majorNode, minorNode });
+    circleState.nodes.push({
+      majorNode,
+      minorNode,
+      outerSegment: segmentNodes[idx].outerSegment,
+      innerSegment: segmentNodes[idx].innerSegment,
+    });
   }
   circleWheel.appendChild(keyLayer);
 }
@@ -997,10 +1024,10 @@ function buildCircle() {
 function renderCircleInfo() {
   const majorKey = keysMajor[circleState.activeIndex];
   const minorKey = keysMinor[circleState.activeIndex];
+  const minorTonic = minorKey.endsWith("m") ? minorKey.slice(0, -1) : minorKey;
   const {
-    majorScaleNotes,
-    minorScaleNotes,
     majorDiatonicChords,
+    minorDiatonicChords,
     progressions,
   } = circleState.derived;
 
@@ -1008,32 +1035,49 @@ function renderCircleInfo() {
     circleCurrentKey.textContent = `当前调性：${majorKey} / ${minorKey}`;
   }
   if (circleKeyTitle) {
-    circleKeyTitle.textContent = `${majorKey} 大调 / ${minorKey}`;
+    circleKeyTitle.textContent = `${majorKey}大调/${minorTonic}小调`;
   }
   if (circleDiatonicChords) {
     const degreeRow = majorDiatonicChords
       .map((item) => `<span class="roman-cell">${item.roman}</span>`)
       .join("");
-    const majorScaleRow = majorScaleNotes
-      .map((item) => `<span class="chord-cell">${item}</span>`)
+    const majorChordRow = majorDiatonicChords
+      .map(
+        (item) =>
+          `<button type="button" class="chord-cell chord-trigger" data-chord-label="${item.name}" aria-label="播放和弦 ${item.name}">${item.name}</button>`,
+      )
       .join("");
-    const minorScaleRow = minorScaleNotes
-      .map((item) => `<span class="chord-cell">${item}</span>`)
+    const minorChordRow = minorDiatonicChords
+      .map(
+        (item) =>
+          `<button type="button" class="chord-cell chord-trigger" data-chord-label="${item.name}" aria-label="播放和弦 ${item.name}">${item.name}</button>`,
+      )
       .join("");
     circleDiatonicChords.innerHTML = `
       <div class="circle-diatonic-grid">
         <div class="row row-with-tag"><span class="row-tag">级数</span>${degreeRow}</div>
-        <div class="row row-with-tag"><span class="row-tag">大调</span>${majorScaleRow}</div>
-        <div class="row row-with-tag"><span class="row-tag">小调</span>${minorScaleRow}</div>
+        <div class="row row-with-tag"><span class="row-tag">大调</span>${majorChordRow}</div>
+        <div class="row row-with-tag"><span class="row-tag">小调</span>${minorChordRow}</div>
       </div>
     `;
+    circleDiatonicChords.querySelectorAll(".chord-trigger").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        flashPlaybackFeedback(btn);
+        playChordByLabel(btn.dataset.chordLabel);
+      });
+    });
   }
   if (circleProgressions) {
     circleProgressions.innerHTML = "";
     progressions.forEach((item) => {
-      const row = document.createElement("div");
-      row.className = "circle-row";
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "circle-row circle-line-row progression-trigger";
+      row.setAttribute("aria-label", `播放和弦进行 ${item.value}`);
       row.innerHTML = `<span class="roman">${item.roman}</span><span class="value">${item.value}</span>`;
+      row.addEventListener("click", () => {
+        playProgressionByLabel(item.value);
+      });
       circleProgressions.appendChild(row);
     });
   }
@@ -1053,6 +1097,11 @@ function renderCircle() {
       el.classList.toggle("is-related", isRelated);
       el.classList.toggle("is-hover", isHover);
       el.setAttribute("aria-selected", String(isActive));
+    });
+    [node.outerSegment, node.innerSegment].forEach((segment) => {
+      segment.classList.toggle("is-active", isActive);
+      segment.classList.toggle("is-related", isRelated);
+      segment.classList.toggle("is-hover", isHover);
     });
   });
   if (circleWheel) {

@@ -298,17 +298,8 @@
                     C 大调 / Am
                   </h3>
                   <section class="circle-info-block">
-                    <h4>大调音阶</h4>
-                    <div class="circle-chip-row" id="circleScaleNotes"></div>
-                  </section>
-                  <section class="circle-info-block">
-                    <h4>小调音阶</h4>
-                    <div class="circle-chip-row" id="circleMinorScaleNotes"></div>
-                  </section>
-                  <section class="circle-info-block">
-                    <h4>自然和弦</h4>
+                    <h4>关系大小调音阶</h4>
                     <div class="circle-list" id="circleDiatonicChords"></div>
-                    <div class="circle-list" id="circleMinorDiatonicChords"></div>
                   </section>
                   <section class="circle-info-block">
                     <h4>常见和弦进行</h4>
@@ -328,19 +319,16 @@
       >
         <div class="phrase-library-head">
           <h2>乐句库</h2>
-          <p>先提供上传入口和占位列表，后续可接入解析与播放。</p>
+          <p>点击 + 号即可上传自定义曲谱、mp3、m4a 等文件。</p>
         </div>
-        <div class="phrase-uploader">
-          <label for="gtpUpload">上传 GTP 文件</label>
-          <input
-            type="file"
-            id="gtpUpload"
-            accept=".gtp,.gp3,.gp4,.gp5,.gpx,.gp"
-          />
-        </div>
-        <div class="phrase-list" id="phraseList">
-          <div class="phrase-item placeholder">暂无上传文件</div>
-        </div>
+        <input
+          type="file"
+          id="gtpUpload"
+          class="phrase-file-input"
+          multiple
+          accept=".gtp,.gp3,.gp4,.gp5,.gpx,.gp,.xml,.musicxml,.mxl,.mscz,.mscx,.ptb,.mp3,.m4a,.wav,.flac,.ogg,.aac,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/ogg,audio/flac"
+        />
+        <div class="phrase-grid" id="phraseList"></div>
       </section>
     </div>
 
