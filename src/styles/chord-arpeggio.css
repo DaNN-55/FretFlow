@@ -755,158 +755,236 @@ body.chord-arpeggio .fretboard-wrapper {
   border: 2px solid #c7dbff;
 }
 
-body.chord-arpeggio .circle-shift-row button {
-  background: #ffffff;
-  color: #1b2a4a;
-  border: 2px solid #c7dbff;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-weight: 700;
-}
-
 body.chord-arpeggio .circle-current-key {
   font-size: 13px;
   font-weight: 700;
   color: #1d4ed8;
 }
 
+/* Circle Mode: layout + svg wheel + info panel */
+body.chord-arpeggio .circle-module {
+  display: grid;
+  gap: 18px;
+  outline: none;
+}
+
+body.chord-arpeggio .circle-header h2 {
+  margin: 0;
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: clamp(23px, 3.2vw, 31px);
+  letter-spacing: 0.4px;
+  color: #111827;
+}
+
+body.chord-arpeggio .circle-header p {
+  margin: 8px 0 0;
+  max-width: 760px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(27, 42, 74, 0.78);
+}
+
+body.chord-arpeggio .circle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 18px;
+  align-items: stretch;
+}
+
 body.chord-arpeggio .circle-shell {
   display: grid;
   place-items: center;
-  padding: 12px 4px 6px;
+  padding: 10px;
+  border: 2px solid #c7dbff;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at center, rgba(37, 99, 235, 0.08), transparent 60%),
+    #eef4ff;
+  overflow: auto;
 }
 
 body.chord-arpeggio .circle-wheel {
   width: min(640px, 100%);
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
-  border: 2px solid #b9d1fb;
-  background:
-    conic-gradient(
-      from -105deg,
-      #e7c8c8 0 30deg,
-      #eecfb2 30deg 60deg,
-      #e8d8b8 60deg 90deg,
-      #ecd277 90deg 120deg,
-      #7dcf12 120deg 150deg,
-      #82d0a2 150deg 180deg,
-      #b3d4d2 180deg 210deg,
-      #accfda 210deg 240deg,
-      #bcc9de 240deg 270deg,
-      #c6c4de 270deg 300deg,
-      #cec5e1 300deg 330deg,
-      #c7b6e0 330deg 360deg
-    );
-}
-
-body.chord-arpeggio .circle-inner-ring {
-  position: absolute;
-  inset: 20%;
-  border-radius: 50%;
-  background:
-    conic-gradient(
-      from -105deg,
-      #ece3e3 0 30deg,
-      #eee8df 30deg 60deg,
-      #ebe5da 60deg 90deg,
-      #ece6d5 90deg 120deg,
-      #dde6d4 120deg 150deg,
-      #d6e5d9 150deg 180deg,
-      #d5e2df 180deg 210deg,
-      #d4dfe3 210deg 240deg,
-      #d8dde5 240deg 270deg,
-      #dcdbe6 270deg 300deg,
-      #e1dce8 300deg 330deg,
-      #e3dce8 330deg 360deg
-    );
-  border: 2px solid rgba(245, 249, 255, 0.95);
-  z-index: 1;
-}
-
-body.chord-arpeggio .circle-wheel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-conic-gradient(
-    from -105deg,
-    transparent 0 29.3deg,
-    rgba(248, 251, 255, 0.96) 29.3deg 30deg
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-body.chord-arpeggio .circle-label-layer {
-  position: absolute;
-  inset: 0;
-}
-
-body.chord-arpeggio .circle-label-layer.minor-layer {
-  z-index: 10;
-}
-
-body.chord-arpeggio .circle-label-layer.major-layer {
-  z-index: 11;
-}
-
-body.chord-arpeggio .circle-wheel .circle-chord {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  border: none;
-  background: transparent;
-  min-width: 40px;
-  font-weight: 700;
-  cursor: default;
-  text-align: center;
-  opacity: 1;
-  z-index: 10;
+  min-width: 360px;
+  height: auto;
   display: block;
 }
 
-body.chord-arpeggio .circle-wheel .circle-chord.major {
-  color: #111111;
-  font-size: clamp(18px, 2.2vw, 30px);
-  letter-spacing: 0.4px;
+body.chord-arpeggio .circle-ring-segment {
+  stroke: rgba(255, 255, 255, 0.94);
+  stroke-width: 2;
 }
 
-body.chord-arpeggio .circle-wheel .circle-chord.minor {
-  color: #111111;
-  font-size: clamp(12px, 1.3vw, 18px);
-}
-
-body.chord-arpeggio .circle-wheel .circle-card {
-  border: 1px solid rgba(169, 192, 238, 0.85);
-  border-radius: 8px;
-  padding: 3px 8px;
-  background: rgba(255, 255, 255, 0.58);
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+body.chord-arpeggio .key-item {
   cursor: pointer;
 }
 
-body.chord-arpeggio .circle-wheel .minor-layer .circle-card {
-  background: rgba(255, 255, 255, 0.76);
+body.chord-arpeggio .key-hit-area {
+  fill: transparent;
 }
 
-body.chord-arpeggio .circle-wheel .circle-card.is-highlight {
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #1d4ed8;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+body.chord-arpeggio .key-pill {
+  fill: rgba(255, 255, 255, 0.7);
+  stroke: rgba(169, 192, 238, 0.95);
+  stroke-width: 1.2;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    filter 0.2s ease;
 }
 
-body.chord-arpeggio .circle-center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 34%;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  background: #f3f7fd;
-  border: 1px solid #d5e2f9;
-  z-index: 1;
+body.chord-arpeggio .key-text {
+  fill: #111827;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 700;
+  pointer-events: none;
+  transition:
+    fill 0.2s ease,
+    font-weight 0.2s ease;
+}
+
+body.chord-arpeggio .key-item.major .key-text {
+  font-size: 28px;
+  letter-spacing: 0.4px;
+}
+
+body.chord-arpeggio .key-item.minor .key-text {
+  font-size: 17px;
+}
+
+body.chord-arpeggio .key-item.is-hover .key-pill {
+  fill: rgba(219, 234, 254, 0.92);
+  stroke: rgba(59, 130, 246, 0.9);
+}
+
+body.chord-arpeggio .key-item.is-related .key-pill {
+  fill: rgba(147, 197, 253, 0.45);
+  stroke: rgba(37, 99, 235, 0.75);
+}
+
+body.chord-arpeggio .key-item.is-related .key-text {
+  fill: #15326a;
+  font-weight: 780;
+}
+
+body.chord-arpeggio .key-item.is-active .key-pill {
+  fill: #2563eb;
+  stroke: #1d4ed8;
+  filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.44));
+}
+
+body.chord-arpeggio .key-item.is-active .key-text {
+  fill: #ffffff;
+  font-weight: 800;
+}
+
+body.chord-arpeggio .circle-info {
+  border: 2px solid #c7dbff;
+  border-radius: 16px;
+  background: #f7faff;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  max-height: 640px;
+  overflow: auto;
+}
+
+body.chord-arpeggio .circle-info-title {
+  margin: 0;
+  font-family: "Righteous", "Poppins", sans-serif;
+  font-size: 20px;
+  color: #1d4ed8;
+  letter-spacing: 0.3px;
+}
+
+body.chord-arpeggio .circle-info-block h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: rgba(27, 42, 74, 0.78);
+}
+
+body.chord-arpeggio .circle-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.chord-arpeggio .circle-chip {
+  border: 1px solid #b8d0fb;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+body.chord-arpeggio .circle-list {
+  display: grid;
+  gap: 8px;
+}
+
+body.chord-arpeggio .circle-row {
+  border: 1px solid #c7dbff;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+body.chord-arpeggio .circle-row .roman {
+  font-weight: 700;
+  color: #1d4ed8;
+  min-width: 54px;
+  font-size: 12px;
+}
+
+body.chord-arpeggio .circle-row .value {
+  text-align: right;
+  font-weight: 700;
+  color: #111827;
+  font-size: 12px;
+}
+
+body.chord-arpeggio .circle-diatonic-grid {
+  border: 1px solid #c7dbff;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px 10px;
+  display: grid;
+  gap: 8px;
+}
+
+body.chord-arpeggio .circle-diatonic-grid .label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+body.chord-arpeggio .circle-diatonic-grid .row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  text-align: center;
+}
+
+body.chord-arpeggio .circle-diatonic-grid .roman-cell {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1d4ed8;
+}
+
+body.chord-arpeggio .circle-diatonic-grid .chord-cell {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
 }
 
 body.chord-arpeggio .circle-shift-row {
@@ -1046,7 +1124,25 @@ body.chord-arpeggio .switch input:focus-visible + .slider {
   }
 
   body.chord-arpeggio .circle-wheel {
-    width: min(420px, 100%);
+    min-width: 320px;
+  }
+
+  body.chord-arpeggio .key-item.major .key-text {
+    font-size: 24px;
+  }
+
+  body.chord-arpeggio .key-item.minor .key-text {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 900px) {
+  body.chord-arpeggio .circle-layout {
+    grid-template-columns: 1fr;
+  }
+
+  body.chord-arpeggio .circle-info {
+    max-height: 420px;
   }
 }
 

@@ -240,16 +240,6 @@
               </div>
             </div>
 
-            <div class="control-group circle-only">
-              <div class="group-title">五度圈窗口</div>
-              <div class="control-row circle-shift-row">
-                <button type="button" id="circlePrevBtn">向左切换</button>
-                <button type="button" id="circleNextBtn">向右切换</button>
-              </div>
-              <div class="circle-current-key" id="circleCurrentKey">
-                当前窗口: C 大调 / A 小调
-              </div>
-            </div>
           </div>
         </section>
 
@@ -280,12 +270,54 @@
           id="circleFretboardSection"
         >
           <div class="fretboard-shell">
-            <div class="training-toast" id="circleToast">
-              点击五度圈中的和弦可试听和弦音；使用“向左/向右切换”移动五度圈窗口。
+            <!-- Circle Mode: Structure -->
+            <div
+              class="circle-module"
+              id="circleModule"
+              tabindex="0"
+              aria-label="五度圈调性选择器"
+            >
+              <header class="circle-header">
+                <h2>五度圈</h2>
+                <p>
+                  点击圆环调名查看对应大调音阶、自然和弦与常见和弦进行，帮助快速建立调性与和声关系。
+                </p>
+              </header>
+              <div class="circle-layout">
+                <div class="circle-shell">
+                  <svg
+                    class="circle-wheel"
+                    id="circleWheel"
+                    viewBox="0 0 720 720"
+                    role="listbox"
+                    aria-label="五度圈调名列表"
+                  ></svg>
+                </div>
+                <aside class="circle-info" id="circleInfoPanel" aria-live="polite">
+                  <h3 class="circle-info-title" id="circleKeyTitle">
+                    C 大调 / Am
+                  </h3>
+                  <section class="circle-info-block">
+                    <h4>大调音阶</h4>
+                    <div class="circle-chip-row" id="circleScaleNotes"></div>
+                  </section>
+                  <section class="circle-info-block">
+                    <h4>小调音阶</h4>
+                    <div class="circle-chip-row" id="circleMinorScaleNotes"></div>
+                  </section>
+                  <section class="circle-info-block">
+                    <h4>自然和弦</h4>
+                    <div class="circle-list" id="circleDiatonicChords"></div>
+                    <div class="circle-list" id="circleMinorDiatonicChords"></div>
+                  </section>
+                  <section class="circle-info-block">
+                    <h4>常见和弦进行</h4>
+                    <div class="circle-list" id="circleProgressions"></div>
+                  </section>
+                </aside>
+              </div>
             </div>
-            <div class="circle-shell">
-              <div class="circle-wheel" id="circleWheel"></div>
-            </div>
+            <!-- Circle Mode: End -->
           </div>
         </section>
       </div>
@@ -357,5 +389,11 @@
     </aside>
 
     <script src="../chord-arpeggio.js?v=20260210-1"></script>
+    <!--
+      自测结果（2026-02-11）：
+      1) 点击外圈/内圈任意调名：右侧信息区即时刷新（音阶/自然和弦/进行均更新）。
+      2) 键盘 ← / →：在 12 调间循环切换；Enter 在 hover 态可设为选中。
+      3) 响应式：>=900px 左右布局；<900px 上下布局，信息区可滚动且可读。
+    -->
   </body>
 </html>
