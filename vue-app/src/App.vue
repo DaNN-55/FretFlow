@@ -175,16 +175,27 @@
                   </label>
                   <label class="field">
                     <span class="field-label">把位</span>
-                    <select
-                      id="chordPositionSelect"
-                      aria-label="选择和弦把位"
-                    >
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                    </select>
+                    <div class="chord-position-control">
+                      <select
+                        id="chordPositionSelect"
+                        aria-label="选择和弦把位"
+                      >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                      <button
+                        type="button"
+                        id="chordPositionPlayBtn"
+                        class="chord-position-play-btn"
+                        aria-label="播放当前把位和弦"
+                        title="播放当前把位和弦"
+                      >
+                        ▶
+                      </button>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -301,7 +312,6 @@
     >
       <div class="phrase-library-head">
         <h2>乐句库</h2>
-        <p>点击 + 号填写信息并上传文件，可长期保存并预览/播放。</p>
       </div>
       <div class="phrase-library-filters">
         <label class="phrase-filter-field" for="phraseTagFilterSelect">

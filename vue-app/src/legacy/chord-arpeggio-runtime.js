@@ -162,6 +162,7 @@ const rootSelect = document.getElementById("rootSelect");
 const scaleSelect = document.getElementById("scaleSelect");
 const chordSelect = document.getElementById("chordSelect");
 const chordPositionSelect = document.getElementById("chordPositionSelect");
+const chordPositionPlayBtn = document.getElementById("chordPositionPlayBtn");
 const highlightRootToggle = document.getElementById("highlightRootToggle");
 const trainingToast = document.getElementById("trainingToast");
 const trainingViewButtons = Array.from(
@@ -244,6 +245,18 @@ const phraseObjectUrls = new Set();
 let phraseViewerScoreApi = null;
 let phraseViewerScoreBlobUrl = "";
 let alphaTabLoadPromise = null;
+let alphaTabSoundFontUrlsPromise = null;
+const configuredBasePath =
+  typeof import.meta !== "undefined" && import.meta.env && import.meta.env.BASE_URL
+    ? import.meta.env.BASE_URL
+    : "/";
+const appBasePath = (() => {
+  if (typeof window === "undefined") return configuredBasePath;
+  const host = String(window.location.hostname || "").toLowerCase();
+  const isLocalDevHost = host === "localhost" || host === "127.0.0.1";
+  if (isLocalDevHost && configuredBasePath !== "/") return "/";
+  return configuredBasePath;
+})();
 const phraseFilterState = {
   tag: "",
   query: "",
@@ -390,27 +403,34 @@ function playTrainingTone(midi, duration = 0.6, when = 0) {
   const osc2 = trainingAudioContext.createOscillator();
   const gain = trainingAudioContext.createGain();
   const lowpass = trainingAudioContext.createBiquadFilter();
+  const body = trainingAudioContext.createBiquadFilter();
 
+  // Softer acoustic-like tone for training mode.
   osc.type = "triangle";
   osc.frequency.setValueAtTime(midiToFreq(midi), t0);
   osc2.type = "sine";
   osc2.frequency.setValueAtTime(midiToFreq(midi) * 2, t0);
 
   gain.gain.setValueAtTime(0.0001, t0);
-  gain.gain.exponentialRampToValueAtTime(0.85, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.65, t0 + 0.008);
   gain.gain.exponentialRampToValueAtTime(
-    0.18,
-    t0 + Math.max(0.08, duration * 0.55),
+    0.2,
+    t0 + Math.max(0.06, duration * 0.45),
   );
   gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
 
   lowpass.type = "lowpass";
-  lowpass.frequency.setValueAtTime(2400, t0);
+  lowpass.frequency.setValueAtTime(2600, t0);
+  lowpass.Q.setValueAtTime(0.7, t0);
+  body.type = "bandpass";
+  body.frequency.setValueAtTime(700, t0);
+  body.Q.setValueAtTime(0.35, t0);
 
   osc.connect(gain);
   osc2.connect(gain);
   gain.connect(lowpass);
-  lowpass.connect(trainingMasterGain);
+  lowpass.connect(body);
+  body.connect(trainingMasterGain);
 
   osc.start(t0);
   osc2.start(t0);
@@ -716,6 +736,10 @@ function updateScaleAndChord() {
 
   if (arpeggioMode && arpeggioDirectionSelect) {
     updateArpeggioPath(chordNoteSet, false);
+  }
+
+  if (chordPositionPlayBtn) {
+    chordPositionPlayBtn.disabled = currentMode !== "training" || trainingView !== "chord";
   }
 }
 
@@ -1274,6 +1298,82 @@ function makeObjectUrl(blob) {
   return url;
 }
 
+function resolveAssetPath(relativePath) {
+  const normalizedBase = appBasePath.endsWith("/") ? appBasePath : `${appBasePath}/`;
+  const normalizedRelative = String(relativePath || "").replace(/^\/+/, "");
+  return `${normalizedBase}${normalizedRelative}`;
+}
+
+function resolveAssetPathEncoded(relativePath) {
+  const normalizedRelative = String(relativePath || "")
+    .replace(/^\/+/, "")
+    .split("/")
+    .map((segment) => {
+      try {
+        return encodeURIComponent(decodeURIComponent(segment));
+      } catch {
+        return encodeURIComponent(segment);
+      }
+    })
+    .join("/");
+  return resolveAssetPath(normalizedRelative);
+}
+
+async function getAlphaTabSoundFontUrls() {
+  if (alphaTabSoundFontUrlsPromise) return alphaTabSoundFontUrlsPromise;
+  alphaTabSoundFontUrlsPromise = Promise.resolve([
+    resolveAssetPathEncoded("vendor/alphaTab/sonivox.sf2"),
+    resolveAssetPathEncoded("vendor/alphaTab/Electric_guitar.SF2"),
+    resolveAssetPathEncoded("vendor/alphaTab/Guitar Acoustic (963KB).sf2"),
+    "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2",
+  ]);
+  return alphaTabSoundFontUrlsPromise;
+}
+
+function unlockAlphaTabAudio(api) {
+  const candidateContexts = [
+    api && api.player && api.player.output && api.player.output.audioContext,
+    api && api.player && api.player.output && api.player.output.context,
+    api && api.audioContext,
+  ];
+  candidateContexts.forEach((ctx) => {
+    if (ctx && typeof ctx.resume === "function" && ctx.state === "suspended") {
+      void ctx.resume();
+    }
+  });
+}
+
+function playChordForPosition() {
+  if (!chordSelect || !chordPositionSelect || !rootSelect) return;
+  unlockTrainingAudio();
+  const root = rootSelect.value;
+  const chordType = chordSelect.value;
+  const chordFormula = chordFormulas[chordType] || chordFormulas.majorTriad;
+  const chordSet = new Set(getNotesFromFormula(root, chordFormula.intervals));
+  const position = parseInt(chordPositionSelect.value, 10);
+  const selectedMidis = [];
+
+  for (let sIdx = 5; sIdx >= 0; sIdx -= 1) {
+    const noteEls = Array.from(document.querySelectorAll(`.note[data-string="${sIdx}"]`));
+    const candidates = noteEls.filter((noteEl) => {
+      const noteName = noteEl.dataset.note;
+      const fret = parseInt(noteEl.dataset.fret, 10);
+      return chordSet.has(noteName) && isInChordPosition(fret, position);
+    });
+    if (candidates.length === 0) continue;
+    candidates.sort((a, b) => parseInt(a.dataset.fret, 10) - parseInt(b.dataset.fret, 10));
+    const chosen = candidates[0];
+    const fret = parseInt(chosen.dataset.fret, 10);
+    selectedMidis.push(getFretMidi(sIdx, fret));
+    chosen.classList.add("hit-preview");
+    setTimeout(() => chosen.classList.remove("hit-preview"), 260);
+  }
+
+  selectedMidis.forEach((midi, idx) => {
+    playTrainingTone(midi, 0.9, idx * 0.03);
+  });
+}
+
 function openPhraseDb() {
   if (phraseDb) return Promise.resolve(phraseDb);
   return new Promise((resolve, reject) => {
@@ -1319,6 +1419,17 @@ async function savePhraseItem(item) {
     const store = tx.objectStore(phraseDbConfig.storeName);
     const request = store.add(item);
     request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deletePhraseItem(id) {
+  const db = await openPhraseDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(phraseDbConfig.storeName, "readwrite");
+    const store = tx.objectStore(phraseDbConfig.storeName);
+    const request = store.delete(id);
+    request.onsuccess = () => resolve(true);
     request.onerror = () => reject(request.error);
   });
 }
@@ -1402,17 +1513,32 @@ async function ensureAlphaTab() {
   if (window.alphaTab && window.alphaTab.AlphaTabApi) return window.alphaTab;
   if (alphaTabLoadPromise) return alphaTabLoadPromise;
   alphaTabLoadPromise = (async () => {
-    const loaded = await new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "/vendor/alphaTab/alphaTab.js";
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.head.appendChild(script);
-    });
-    if (loaded && window.alphaTab && window.alphaTab.AlphaTabApi) {
-      return window.alphaTab;
+    const sources = [
+      resolveAssetPath("vendor/alphaTab/alphaTab.js"),
+      resolveAssetPath("vendor/alphaTab/alphaTab.vite.js"),
+      "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js",
+    ];
+
+    for (const src of sources) {
+      const loaded = await new Promise((resolve) => {
+        const existing = document.querySelector(`script[data-alphatab-src="${src}"]`);
+        if (existing) {
+          resolve(Boolean(window.alphaTab && window.alphaTab.AlphaTabApi));
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.dataset.alphatabSrc = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+      });
+      if (loaded && window.alphaTab && window.alphaTab.AlphaTabApi) {
+        return window.alphaTab;
+      }
     }
+
     return null;
   })();
   return alphaTabLoadPromise;
@@ -1517,9 +1643,10 @@ function renderPhraseLibrary() {
   }
 
   filteredItems.forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
+    const card = document.createElement("article");
     card.className = "phrase-card phrase-file-card";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
     card.setAttribute("aria-label", `查看乐句 ${item.title || item.name || "未命名"}`);
 
     const cover = createPhraseThumbnail(item);
@@ -1566,10 +1693,43 @@ function renderPhraseLibrary() {
     if (tags.length > 0) info.appendChild(tagRow);
     if (desc.textContent) info.appendChild(desc);
 
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "phrase-card-delete";
+    deleteBtn.setAttribute("aria-label", `删除乐句 ${item.title || item.name || "未命名"}`);
+    deleteBtn.title = "删除乐句";
+    deleteBtn.innerHTML = "<span aria-hidden=\"true\">🗑</span>";
+    deleteBtn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!confirm("确定删除这个乐句吗？删除后不可恢复。")) return;
+      try {
+        if (item.id != null) {
+          await deletePhraseItem(item.id);
+          const index = phraseDemoItems.findIndex((entry) => entry.id === item.id);
+          if (index >= 0) phraseDemoItems.splice(index, 1);
+        } else {
+          const index = phraseDemoItems.findIndex((entry) => entry === item);
+          if (index >= 0) phraseDemoItems.splice(index, 1);
+        }
+        renderPhraseLibrary();
+      } catch (error) {
+        console.error("Delete phrase failed:", error);
+        alert("删除失败，请重试");
+      }
+    });
+
     card.appendChild(cover);
     card.appendChild(info);
+    card.appendChild(deleteBtn);
     card.addEventListener("click", () => {
       void openPhraseViewer(item);
+    });
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        void openPhraseViewer(item);
+      }
     });
     phraseList.appendChild(card);
   });
@@ -1625,11 +1785,14 @@ async function openPhraseViewer(item) {
     phraseViewerBody.appendChild(frame);
   } else if (mediaKind === "score") {
     const alphaTabLib = await ensureAlphaTab();
+    const alphaTabSoundFonts = await getAlphaTabSoundFontUrls();
     if (!alphaTabLib || !alphaTabLib.AlphaTabApi || !item.fileBlob) {
       const tip = document.createElement("div");
       tip.className = "phrase-viewer-tip";
+      const alphaTabLocalJs = resolveAssetPath("vendor/alphaTab/alphaTab.js");
+      const alphaTabLocalViteJs = resolveAssetPath("vendor/alphaTab/alphaTab.vite.js");
       tip.innerHTML =
-        "本地 alphaTab 资源加载失败，暂时无法在线播放 GTP。<br/>请确认以下文件可访问：`/vendor/alphaTab/alphaTab.js` 与 `/vendor/alphaTab/sonivox.sf2`。";
+        `本地 alphaTab 资源加载失败，暂时无法在线播放 GTP。<br/>请确认以下文件可访问：\`${alphaTabLocalJs}\` 或 \`${alphaTabLocalViteJs}\`。`;
       phraseViewerBody.appendChild(tip);
       if (item.fileBlob) {
         const downloadBtn = document.createElement("a");
@@ -1646,10 +1809,12 @@ async function openPhraseViewer(item) {
       playBtn.type = "button";
       playBtn.className = "btn-primary";
       playBtn.textContent = "播放/暂停";
+      playBtn.disabled = false;
       const stopBtn = document.createElement("button");
       stopBtn.type = "button";
       stopBtn.className = "btn-ghost";
       stopBtn.textContent = "停止";
+      stopBtn.disabled = false;
       toolbar.appendChild(playBtn);
       toolbar.appendChild(stopBtn);
 
@@ -1659,41 +1824,98 @@ async function openPhraseViewer(item) {
       phraseViewerBody.appendChild(scoreWrap);
       phraseViewerScoreBlobUrl = makeObjectUrl(item.fileBlob);
       const AlphaTabApiCtor = alphaTabLib.AlphaTabApi;
-      phraseViewerScoreApi = new AlphaTabApiCtor(scoreWrap, {
-        file: phraseViewerScoreBlobUrl,
-        core: {
-          fontDirectory: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/font/",
-        },
-        player: {
-          enablePlayer: true,
-          soundFont: "/vendor/alphaTab/sonivox.sf2",
-        },
-      });
+      let soundFontIndex = 0;
+      const bindScoreApiEvents = () => {
+        if (!phraseViewerScoreApi) return;
+        if (phraseViewerScoreApi.playerReady && phraseViewerScoreApi.playerReady.on) {
+          phraseViewerScoreApi.playerReady.on(() => {
+            playBtn.disabled = false;
+            stopBtn.disabled = false;
+          });
+        }
+        if (phraseViewerScoreApi.error && phraseViewerScoreApi.error.on) {
+          phraseViewerScoreApi.error.on((e) => {
+            const errorMessage = e && e.message ? String(e.message) : "";
+            const isSoundFontError =
+              /soundfont/i.test(errorMessage) || /Soundfont2/i.test(errorMessage);
+            if (isSoundFontError && soundFontIndex < alphaTabSoundFonts.length - 1) {
+              soundFontIndex += 1;
+              console.warn("AlphaTab soundFont failed, retrying with:", alphaTabSoundFonts[soundFontIndex]);
+              initScoreApi(alphaTabSoundFonts[soundFontIndex]);
+              return;
+            }
+            const tip = document.createElement("div");
+            tip.className = "phrase-viewer-tip";
+            tip.textContent = `曲谱渲染失败：${errorMessage || "请检查文件格式或资源路径"}`;
+            phraseViewerBody.innerHTML = "";
+            phraseViewerBody.appendChild(tip);
+          });
+        }
+      };
+      const initScoreApi = (soundFontUrl) => {
+        console.info("AlphaTab soundFont try:", soundFontUrl);
+        if (phraseViewerScoreApi && typeof phraseViewerScoreApi.destroy === "function") {
+          try {
+            phraseViewerScoreApi.destroy();
+          } catch (error) {
+            console.warn("Destroy AlphaTab before re-init failed:", error);
+          }
+        }
+        phraseViewerScoreApi = new AlphaTabApiCtor(scoreWrap, {
+          file: phraseViewerScoreBlobUrl,
+          core: {
+            fontDirectory: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/font/",
+          },
+          player: {
+            enablePlayer: true,
+            soundFont: soundFontUrl,
+          },
+        });
+        bindScoreApiEvents();
+      };
+      initScoreApi(alphaTabSoundFonts[soundFontIndex]);
       playBtn.addEventListener("click", () => {
         if (!phraseViewerScoreApi) return;
-        if (typeof phraseViewerScoreApi.playPause === "function") {
-          phraseViewerScoreApi.playPause();
-          return;
-        }
-        if (typeof phraseViewerScoreApi.play === "function") {
-          phraseViewerScoreApi.play();
+        unlockAlphaTabAudio(phraseViewerScoreApi);
+        try {
+          if (typeof phraseViewerScoreApi.playPause === "function") {
+            phraseViewerScoreApi.playPause();
+            return;
+          }
+          if (
+            phraseViewerScoreApi.player &&
+            typeof phraseViewerScoreApi.player.playPause === "function"
+          ) {
+            phraseViewerScoreApi.player.playPause();
+            return;
+          }
+          if (typeof phraseViewerScoreApi.play === "function") {
+            phraseViewerScoreApi.play();
+            return;
+          }
+          if (
+            phraseViewerScoreApi.player &&
+            typeof phraseViewerScoreApi.player.play === "function"
+          ) {
+            phraseViewerScoreApi.player.play();
+          }
+        } catch (error) {
+          console.error("AlphaTab play failed:", error);
         }
       });
       stopBtn.addEventListener("click", () => {
         if (!phraseViewerScoreApi) return;
         if (typeof phraseViewerScoreApi.stop === "function") {
           phraseViewerScoreApi.stop();
+          return;
+        }
+        if (
+          phraseViewerScoreApi.player &&
+          typeof phraseViewerScoreApi.player.stop === "function"
+        ) {
+          phraseViewerScoreApi.player.stop();
         }
       });
-      if (phraseViewerScoreApi.error && phraseViewerScoreApi.error.on) {
-        phraseViewerScoreApi.error.on((e) => {
-          const tip = document.createElement("div");
-          tip.className = "phrase-viewer-tip";
-          tip.textContent = `曲谱渲染失败：${e && e.message ? e.message : "请检查文件格式或资源路径"}`;
-          phraseViewerBody.innerHTML = "";
-          phraseViewerBody.appendChild(tip);
-        });
-      }
     }
   } else {
     const tip = document.createElement("div");
@@ -1824,6 +2046,9 @@ if (arpeggioDirectionSelect) {
 }
 if (chordPositionSelect) {
   chordPositionSelect.addEventListener("change", updateScaleAndChord);
+}
+if (chordPositionPlayBtn) {
+  chordPositionPlayBtn.addEventListener("click", playChordForPosition);
 }
 trainingViewButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
