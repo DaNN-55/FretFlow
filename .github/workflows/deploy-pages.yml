@@ -17,9 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: vue-app
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,15 +24,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: vue-app/package-lock.json
+          node-version: 22.x
 
       - name: Install deps
-        run: npm ci
+        run: npm install
+        working-directory: vue-app
 
       - name: Build
         run: npm run build
+        working-directory: vue-app
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
