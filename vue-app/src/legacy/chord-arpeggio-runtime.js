@@ -153,20 +153,10 @@ const circleConfig = {
   startAngleDeg: -90,
 };
 
-const circleOuterColors = [
-  "#e7c8c8",
-  "#eecfb2",
-  "#e8d8b8",
-  "#ecd277",
-  "#7dcf12",
-  "#82d0a2",
-  "#b3d4d2",
-  "#accfda",
-  "#bcc9de",
-  "#c6c4de",
-  "#cec5e1",
-  "#c7b6e0",
-];
+const circleRingColors = {
+  outer: "#7aa8f3",
+  inner: "#c9dbfb",
+};
 
 const rootSelect = document.getElementById("rootSelect");
 const scaleSelect = document.getElementById("scaleSelect");
@@ -201,8 +191,22 @@ const circleMinorScaleNotes = document.getElementById("circleMinorScaleNotes");
 const circleDiatonicChords = document.getElementById("circleDiatonicChords");
 const circleMinorDiatonicChords = document.getElementById("circleMinorDiatonicChords");
 const circleProgressions = document.getElementById("circleProgressions");
-const gtpUpload = document.getElementById("gtpUpload");
 const phraseList = document.getElementById("phraseList");
+const phraseFormModal = document.getElementById("phraseFormModal");
+const phraseForm = document.getElementById("phraseForm");
+const phraseFormCloseBtn = document.getElementById("phraseFormCloseBtn");
+const phraseFormCancelBtn = document.getElementById("phraseFormCancelBtn");
+const phraseNameInput = document.getElementById("phraseNameInput");
+const phraseAuthorInput = document.getElementById("phraseAuthorInput");
+const phraseUploadedAtInput = document.getElementById("phraseUploadedAtInput");
+const phraseFileInput = document.getElementById("phraseFileInput");
+const phraseTagInput = document.getElementById("phraseTagInput");
+const phraseTagFilterSelect = document.getElementById("phraseTagFilterSelect");
+const phraseTitleSearchInput = document.getElementById("phraseTitleSearchInput");
+const phraseViewerModal = document.getElementById("phraseViewerModal");
+const phraseViewerCloseBtn = document.getElementById("phraseViewerCloseBtn");
+const phraseViewerMeta = document.getElementById("phraseViewerMeta");
+const phraseViewerBody = document.getElementById("phraseViewerBody");
 const topTabButtons = Array.from(document.querySelectorAll("[data-top-tab]"));
 const trainingTabPanel = document.getElementById("trainingTabPanel");
 const phraseTabPanel = document.getElementById("phraseTabPanel");
@@ -235,6 +239,20 @@ const circleState = {
   nodes: [],
 };
 const phraseDemoItems = [];
+const phraseObjectUrls = new Set();
+let phraseViewerScoreApi = null;
+let phraseViewerScoreBlobUrl = "";
+let alphaTabLoadPromise = null;
+const phraseFilterState = {
+  tag: "",
+  query: "",
+};
+const phraseDbConfig = {
+  name: "fretflow_phrase_library",
+  version: 1,
+  storeName: "phrases",
+};
+let phraseDb = null;
 let currentTopTab = "training";
 
 const chordPositionRanges = {
@@ -328,6 +346,7 @@ function setTrainingView(view) {
   trainingViewButtons.forEach((btn) => {
     btn.disabled = trainingDisabled;
   });
+  if (rootSelect) rootSelect.disabled = trainingDisabled || nextView === "none";
   if (scaleSelect)
     scaleSelect.disabled = trainingDisabled || nextView !== "scale";
   if (chordSelect)
@@ -965,7 +984,7 @@ function buildCircle() {
         startAngle,
         endAngle,
       ),
-      fill: circleOuterColors[idx],
+      fill: circleRingColors.outer,
     });
     const innerSegment = createSvgElement("path", {
       class: "circle-ring-segment inner-segment",
@@ -975,7 +994,7 @@ function buildCircle() {
         startAngle,
         endAngle,
       ),
-      fill: toRgba(circleOuterColors[idx], 0.45),
+      fill: circleRingColors.inner,
     });
     ringLayer.appendChild(outerSegment);
     ringLayer.appendChild(innerSegment);
@@ -1168,6 +1187,7 @@ const phraseScoreExtensions = new Set([
 ]);
 
 const phraseAudioExtensions = new Set(["mp3", "m4a", "wav", "flac", "ogg", "aac"]);
+const phraseImageExtensions = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 
 function getFileExtension(filename) {
   const lastDot = filename.lastIndexOf(".");
@@ -1177,9 +1197,20 @@ function getFileExtension(filename) {
 
 function inferPhraseType(filename) {
   const ext = getFileExtension(filename);
+  if (phraseImageExtensions.has(ext)) return `图片 · .${ext}`;
+  if (ext === "pdf") return "文档 · .pdf";
   if (phraseScoreExtensions.has(ext)) return `曲谱 · .${ext}`;
   if (phraseAudioExtensions.has(ext)) return `音频 · .${ext}`;
   return ext ? `文件 · .${ext}` : "文件";
+}
+
+function inferPhraseTag(filename, mimeType = "") {
+  const ext = getFileExtension(filename || "");
+  if (phraseScoreExtensions.has(ext)) return "曲谱";
+  if (phraseAudioExtensions.has(ext) || mimeType.startsWith("audio/")) return "音频";
+  if (phraseImageExtensions.has(ext) || mimeType.startsWith("image/")) return "图片";
+  if (ext === "pdf" || mimeType === "application/pdf") return "文档";
+  return "其他";
 }
 
 function inferSongMeta(filename) {
@@ -1198,41 +1229,306 @@ function inferSongMeta(filename) {
   };
 }
 
+function getNowDateTimeLocal() {
+  const now = new Date();
+  const tzOffset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+}
+
+function toDisplayDate(value) {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", { hour12: false });
+}
+
+function toDisplayDateOnly(value) {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("zh-CN");
+}
+
+function getPhraseMediaKind(item) {
+  const filename = item.fileName || item.name || "";
+  const ext = getFileExtension(filename);
+  const mime = item.mimeType || "";
+  if (mime.startsWith("image/") || phraseImageExtensions.has(ext)) return "image";
+  if (mime.startsWith("audio/") || phraseAudioExtensions.has(ext)) return "audio";
+  if (mime === "application/pdf" || ext === "pdf") return "pdf";
+  if (phraseScoreExtensions.has(ext)) return "score";
+  return "file";
+}
+
+function clearPhraseObjectUrls() {
+  phraseObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  phraseObjectUrls.clear();
+}
+
+function makeObjectUrl(blob) {
+  if (!blob) return "";
+  const url = URL.createObjectURL(blob);
+  phraseObjectUrls.add(url);
+  return url;
+}
+
+function openPhraseDb() {
+  if (phraseDb) return Promise.resolve(phraseDb);
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(phraseDbConfig.name, phraseDbConfig.version);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(phraseDbConfig.storeName)) {
+        db.createObjectStore(phraseDbConfig.storeName, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+      }
+    };
+    request.onsuccess = () => {
+      phraseDb = request.result;
+      resolve(phraseDb);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadPhraseItems() {
+  const db = await openPhraseDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(phraseDbConfig.storeName, "readonly");
+    const store = tx.objectStore(phraseDbConfig.storeName);
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const items = Array.isArray(request.result) ? request.result : [];
+      items.sort(
+        (a, b) => new Date(b.uploadedAt || 0).getTime() - new Date(a.uploadedAt || 0).getTime(),
+      );
+      resolve(items);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function savePhraseItem(item) {
+  const db = await openPhraseDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(phraseDbConfig.storeName, "readwrite");
+    const store = tx.objectStore(phraseDbConfig.storeName);
+    const request = store.add(item);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function openPhraseForm() {
+  if (!phraseFormModal || !phraseForm) return;
+  phraseForm.reset();
+  if (phraseUploadedAtInput) {
+    phraseUploadedAtInput.value = getNowDateTimeLocal();
+  }
+  if (phraseTagInput) phraseTagInput.value = "曲谱";
+  phraseFormModal.hidden = false;
+  if (phraseNameInput) phraseNameInput.focus();
+}
+
+function closePhraseForm() {
+  if (!phraseFormModal) return;
+  phraseFormModal.hidden = true;
+}
+
+function closePhraseViewer() {
+  if (!phraseViewerModal) return;
+  destroyPhraseScoreViewer();
+  phraseViewerModal.hidden = true;
+  if (phraseViewerBody) phraseViewerBody.innerHTML = "";
+}
+
+function destroyPhraseScoreViewer() {
+  if (phraseViewerScoreApi && typeof phraseViewerScoreApi.destroy === "function") {
+    phraseViewerScoreApi.destroy();
+  }
+  phraseViewerScoreApi = null;
+  if (phraseViewerScoreBlobUrl) {
+    URL.revokeObjectURL(phraseViewerScoreBlobUrl);
+    phraseObjectUrls.delete(phraseViewerScoreBlobUrl);
+    phraseViewerScoreBlobUrl = "";
+  }
+}
+
+async function ensureAlphaTab() {
+  if (window.alphaTab && window.alphaTab.AlphaTabApi) return window.alphaTab;
+  if (alphaTabLoadPromise) return alphaTabLoadPromise;
+  alphaTabLoadPromise = (async () => {
+    const loaded = await new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "/vendor/alphaTab/alphaTab.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+    if (loaded && window.alphaTab && window.alphaTab.AlphaTabApi) {
+      return window.alphaTab;
+    }
+    return null;
+  })();
+  return alphaTabLoadPromise;
+}
+
+function createPhraseThumbnail(item) {
+  const thumb = document.createElement("div");
+  thumb.className = "phrase-card-thumb";
+  const mediaKind = getPhraseMediaKind(item);
+  if (mediaKind === "image" && item.fileBlob) {
+    const img = document.createElement("img");
+    img.src = makeObjectUrl(item.fileBlob);
+    img.alt = `${item.title || "乐句"} 缩略图`;
+    thumb.appendChild(img);
+    return thumb;
+  }
+
+  const typeLabel = document.createElement("span");
+  typeLabel.className = "thumb-type";
+  if (mediaKind === "audio") typeLabel.textContent = "音频预览";
+  else if (mediaKind === "pdf") typeLabel.textContent = "PDF 文档";
+  else if (mediaKind === "score") typeLabel.textContent = "GTP 曲谱";
+  else typeLabel.textContent = "文件预览";
+  thumb.appendChild(typeLabel);
+  return thumb;
+}
+
+function getPhraseTagList(item) {
+  if (Array.isArray(item.tags)) {
+    return item.tags.filter(Boolean).slice(0, 5);
+  }
+  if (typeof item.tags === "string" && item.tags.trim()) {
+    return item.tags
+      .split(/[,\s/|]+/)
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+  }
+  if (item.fileTag) return [item.fileTag];
+  return [];
+}
+
+function getFilteredPhraseItems() {
+  const activeTag = phraseFilterState.tag.trim();
+  const query = phraseFilterState.query.trim().toLowerCase();
+  return phraseDemoItems.filter((item) => {
+    const title = String(item.title || item.name || "").toLowerCase();
+    const tags = getPhraseTagList(item);
+    const hasTag = !activeTag || tags.includes(activeTag);
+    const hasQuery = !query || title.includes(query);
+    return hasTag && hasQuery;
+  });
+}
+
+function updatePhraseTagFilterOptions() {
+  if (!phraseTagFilterSelect) return;
+  const currentValue = phraseTagFilterSelect.value || "";
+  const baseOptions = [
+    ["", "全部标签"],
+    ["曲谱", "曲谱"],
+    ["音频", "音频"],
+    ["文档", "文档"],
+    ["图片", "图片"],
+    ["其他", "其他"],
+  ];
+  const dynamicTags = Array.from(
+    new Set(
+      phraseDemoItems
+        .flatMap((item) => getPhraseTagList(item))
+        .filter((tag) => tag && !baseOptions.some(([value]) => value === tag)),
+    ),
+  );
+
+  phraseTagFilterSelect.innerHTML = "";
+  [...baseOptions, ...dynamicTags.map((tag) => [tag, tag])].forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    phraseTagFilterSelect.appendChild(option);
+  });
+
+  phraseTagFilterSelect.value = currentValue;
+}
+
 function renderPhraseLibrary() {
   if (!phraseList) return;
+  clearPhraseObjectUrls();
   phraseList.innerHTML = "";
+  updatePhraseTagFilterOptions();
+  const filteredItems = getFilteredPhraseItems();
 
   if (phraseDemoItems.length === 0) {
     const empty = document.createElement("div");
     empty.className = "phrase-empty-tip";
-    empty.textContent = "点击 + 号上传曲谱或音频文件";
+    empty.textContent = "点击 + 号上传乐句文件并保存到本地库";
+    phraseList.appendChild(empty);
+  } else if (filteredItems.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "phrase-empty-tip";
+    empty.textContent = "未找到符合筛选条件的乐句";
     phraseList.appendChild(empty);
   }
 
-  phraseDemoItems.forEach((item) => {
-    const card = document.createElement("article");
+  filteredItems.forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
     card.className = "phrase-card phrase-file-card";
+    card.setAttribute("aria-label", `查看乐句 ${item.title || item.name || "未命名"}`);
 
+    const cover = createPhraseThumbnail(item);
+    cover.classList.add("phrase-card-cover");
     const title = document.createElement("div");
     title.className = "phrase-card-title";
     title.textContent = item.title || item.name || "未命名";
 
-    const author = document.createElement("div");
-    author.className = "phrase-card-author";
-    author.textContent = item.author || "未知作者";
+    const info = document.createElement("div");
+    info.className = "phrase-card-info";
 
-    const time = document.createElement("div");
-    time.className = "phrase-card-time";
-    time.textContent = item.uploadedAt || "--";
+    const meta = document.createElement("div");
+    meta.className = "phrase-card-meta";
+    const metaParts = [toDisplayDateOnly(item.uploadedAt)];
+    if (item.bpm) metaParts.push(`${item.bpm} BPM`);
+    if (item.difficulty) metaParts.push(`难度 ${item.difficulty}`);
+    meta.textContent = metaParts.filter(Boolean).join(" / ");
 
-    const type = document.createElement("div");
-    type.className = "phrase-card-type";
-    type.textContent = item.typeLabel || "文件";
+    const tagRow = document.createElement("div");
+    tagRow.className = "phrase-card-tags";
+    const tags = getPhraseTagList(item).slice(0, 3);
+    tags.forEach((tag) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "phrase-tag-chip";
+      chip.textContent = tag;
+      chip.setAttribute("data-tag", tag);
+      chip.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        phraseFilterState.tag = tag;
+        if (phraseTagFilterSelect) phraseTagFilterSelect.value = tag;
+        renderPhraseLibrary();
+      });
+      tagRow.appendChild(chip);
+    });
 
-    card.appendChild(title);
-    card.appendChild(author);
-    card.appendChild(time);
-    card.appendChild(type);
+    const desc = document.createElement("div");
+    desc.className = "phrase-card-desc";
+    desc.textContent = item.description || "";
+
+    info.appendChild(title);
+    info.appendChild(meta);
+    if (tags.length > 0) info.appendChild(tagRow);
+    if (desc.textContent) info.appendChild(desc);
+
+    card.appendChild(cover);
+    card.appendChild(info);
+    card.addEventListener("click", () => {
+      void openPhraseViewer(item);
+    });
     phraseList.appendChild(card);
   });
 
@@ -1241,30 +1537,165 @@ function renderPhraseLibrary() {
   addCard.className = "phrase-card phrase-upload-card";
   addCard.setAttribute("aria-label", "上传文件");
   addCard.innerHTML = "<span>+</span>";
-  addCard.addEventListener("click", () => {
-    if (gtpUpload) gtpUpload.click();
-  });
+  addCard.addEventListener("click", openPhraseForm);
   phraseList.appendChild(addCard);
 }
 
-function handlePhraseUpload(event) {
-  const files = Array.from(event.target.files || []);
-  if (files.length === 0) return;
+async function openPhraseViewer(item) {
+  if (!phraseViewerModal || !phraseViewerBody || !phraseViewerMeta) return;
+  destroyPhraseScoreViewer();
+  phraseViewerBody.innerHTML = "";
+  const fileTag = item.fileTag || inferPhraseTag(item.fileName || item.name || "", item.mimeType || "");
+  phraseViewerMeta.innerHTML = `
+    <div><strong>名称：</strong>${item.title || "未命名"}</div>
+    <div><strong>作者：</strong>${item.author || "未知作者"}</div>
+    <div><strong>上传时间：</strong>${toDisplayDate(item.uploadedAt)}</div>
+    <div><strong>类型：</strong>${item.typeLabel || "文件"}</div>
+    <div><strong>标签：</strong>${fileTag}</div>
+  `;
 
-  files.forEach((file) => {
-    const { title, author } = inferSongMeta(file.name);
-    phraseDemoItems.unshift({
-      name: file.name,
-      title,
-      author,
-      typeLabel: inferPhraseType(file.name),
-      sizeKB: (file.size / 1024).toFixed(1),
-      uploadedAt: new Date().toLocaleString("zh-CN", { hour12: false }),
-    });
-  });
+  const mediaKind = getPhraseMediaKind(item);
+  if (mediaKind === "image" && item.fileBlob) {
+    const img = document.createElement("img");
+    img.className = "phrase-viewer-image";
+    img.src = makeObjectUrl(item.fileBlob);
+    img.alt = item.title || "乐句图片";
+    phraseViewerBody.appendChild(img);
+  } else if (mediaKind === "audio" && item.fileBlob) {
+    const audio = document.createElement("audio");
+    audio.className = "phrase-viewer-audio";
+    audio.controls = true;
+    audio.preload = "metadata";
+    audio.src = makeObjectUrl(item.fileBlob);
+    phraseViewerBody.appendChild(audio);
+  } else if (mediaKind === "pdf" && item.fileBlob) {
+    const frame = document.createElement("iframe");
+    frame.className = "phrase-viewer-frame";
+    frame.src = makeObjectUrl(item.fileBlob);
+    frame.title = item.title || "PDF 预览";
+    phraseViewerBody.appendChild(frame);
+  } else if (mediaKind === "score") {
+    const alphaTabLib = await ensureAlphaTab();
+    if (!alphaTabLib || !alphaTabLib.AlphaTabApi || !item.fileBlob) {
+      const tip = document.createElement("div");
+      tip.className = "phrase-viewer-tip";
+      tip.innerHTML =
+        "本地 alphaTab 资源加载失败，暂时无法在线播放 GTP。<br/>请确认以下文件可访问：`/vendor/alphaTab/alphaTab.js` 与 `/vendor/alphaTab/sonivox.sf2`。";
+      phraseViewerBody.appendChild(tip);
+      if (item.fileBlob) {
+        const downloadBtn = document.createElement("a");
+        downloadBtn.className = "btn-primary";
+        downloadBtn.href = makeObjectUrl(item.fileBlob);
+        downloadBtn.download = item.fileName || "phrase.gtp";
+        downloadBtn.textContent = "下载曲谱文件";
+        phraseViewerBody.appendChild(downloadBtn);
+      }
+    } else {
+      const toolbar = document.createElement("div");
+      toolbar.className = "phrase-score-toolbar";
+      const playBtn = document.createElement("button");
+      playBtn.type = "button";
+      playBtn.className = "btn-primary";
+      playBtn.textContent = "播放/暂停";
+      const stopBtn = document.createElement("button");
+      stopBtn.type = "button";
+      stopBtn.className = "btn-ghost";
+      stopBtn.textContent = "停止";
+      toolbar.appendChild(playBtn);
+      toolbar.appendChild(stopBtn);
 
+      const scoreWrap = document.createElement("div");
+      scoreWrap.className = "phrase-viewer-score";
+      phraseViewerBody.appendChild(toolbar);
+      phraseViewerBody.appendChild(scoreWrap);
+      phraseViewerScoreBlobUrl = makeObjectUrl(item.fileBlob);
+      const AlphaTabApiCtor = alphaTabLib.AlphaTabApi;
+      phraseViewerScoreApi = new AlphaTabApiCtor(scoreWrap, {
+        file: phraseViewerScoreBlobUrl,
+        core: {
+          fontDirectory: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/font/",
+        },
+        player: {
+          enablePlayer: true,
+          soundFont: "/vendor/alphaTab/sonivox.sf2",
+        },
+      });
+      playBtn.addEventListener("click", () => {
+        if (!phraseViewerScoreApi) return;
+        if (typeof phraseViewerScoreApi.playPause === "function") {
+          phraseViewerScoreApi.playPause();
+          return;
+        }
+        if (typeof phraseViewerScoreApi.play === "function") {
+          phraseViewerScoreApi.play();
+        }
+      });
+      stopBtn.addEventListener("click", () => {
+        if (!phraseViewerScoreApi) return;
+        if (typeof phraseViewerScoreApi.stop === "function") {
+          phraseViewerScoreApi.stop();
+        }
+      });
+      if (phraseViewerScoreApi.error && phraseViewerScoreApi.error.on) {
+        phraseViewerScoreApi.error.on((e) => {
+          const tip = document.createElement("div");
+          tip.className = "phrase-viewer-tip";
+          tip.textContent = `曲谱渲染失败：${e && e.message ? e.message : "请检查文件格式或资源路径"}`;
+          phraseViewerBody.innerHTML = "";
+          phraseViewerBody.appendChild(tip);
+        });
+      }
+    }
+  } else {
+    const tip = document.createElement("div");
+    tip.className = "phrase-viewer-tip";
+    tip.textContent = "该文件类型暂不支持在线预览，可先下载后查看。";
+    phraseViewerBody.appendChild(tip);
+  }
+
+  phraseViewerModal.hidden = false;
+}
+
+async function handlePhraseFormSubmit(event) {
+  event.preventDefault();
+  if (!phraseFileInput || !phraseNameInput || !phraseAuthorInput || !phraseUploadedAtInput) return;
+  const file = phraseFileInput.files && phraseFileInput.files[0];
+  if (!file) return;
+  const title = phraseNameInput.value.trim() || inferSongMeta(file.name).title;
+  const author = phraseAuthorInput.value.trim() || "未知作者";
+  const uploadedAt = phraseUploadedAtInput.value || getNowDateTimeLocal();
+
+  const fileTag = phraseTagInput && phraseTagInput.value
+    ? phraseTagInput.value
+    : inferPhraseTag(file.name, file.type || "");
+  const item = {
+    fileName: file.name,
+    title,
+    author,
+    uploadedAt,
+    typeLabel: inferPhraseType(file.name),
+    fileTag,
+    sizeKB: (file.size / 1024).toFixed(1),
+    size: file.size,
+    mimeType: file.type || "",
+    fileBlob: file,
+  };
+
+  const createdId = await savePhraseItem(item);
+  item.id = createdId;
+  phraseDemoItems.unshift(item);
   renderPhraseLibrary();
-  event.target.value = "";
+  closePhraseForm();
+}
+
+async function initPhraseLibrary() {
+  try {
+    const items = await loadPhraseItems();
+    phraseDemoItems.splice(0, phraseDemoItems.length, ...items);
+  } catch (error) {
+    console.error("Phrase library init failed:", error);
+  }
+  renderPhraseLibrary();
 }
 
 function setTopTab(tab) {
@@ -1286,6 +1717,17 @@ function setTopTab(tab) {
 
   document.body.classList.toggle("tab-training", nextTab === "training");
   document.body.classList.toggle("tab-phrase", nextTab === "phrase");
+}
+
+function handleGlobalEscape(event) {
+  if (event.key !== "Escape") return;
+  if (phraseViewerModal && !phraseViewerModal.hidden) {
+    closePhraseViewer();
+    return;
+  }
+  if (phraseFormModal && !phraseFormModal.hidden) {
+    closePhraseForm();
+  }
 }
 
 patternButtons.forEach((btn) => {
@@ -1319,13 +1761,45 @@ if (circlePrevBtn) {
 if (circleNextBtn) {
   circleNextBtn.addEventListener("click", () => shiftCircleWindow(1));
 }
-if (gtpUpload) {
-  gtpUpload.addEventListener("change", handlePhraseUpload);
+if (phraseForm) {
+  phraseForm.addEventListener("submit", handlePhraseFormSubmit);
+}
+if (phraseTagFilterSelect) {
+  phraseTagFilterSelect.addEventListener("change", (event) => {
+    phraseFilterState.tag = event.target.value || "";
+    renderPhraseLibrary();
+  });
+}
+if (phraseTitleSearchInput) {
+  phraseTitleSearchInput.addEventListener("input", (event) => {
+    phraseFilterState.query = event.target.value || "";
+    renderPhraseLibrary();
+  });
+}
+if (phraseFormCloseBtn) {
+  phraseFormCloseBtn.addEventListener("click", closePhraseForm);
+}
+if (phraseFormCancelBtn) {
+  phraseFormCancelBtn.addEventListener("click", closePhraseForm);
+}
+if (phraseFormModal) {
+  phraseFormModal.addEventListener("click", (event) => {
+    if (event.target === phraseFormModal) closePhraseForm();
+  });
+}
+if (phraseViewerCloseBtn) {
+  phraseViewerCloseBtn.addEventListener("click", closePhraseViewer);
+}
+if (phraseViewerModal) {
+  phraseViewerModal.addEventListener("click", (event) => {
+    if (event.target === phraseViewerModal) closePhraseViewer();
+  });
 }
 topTabButtons.forEach((btn) => {
   btn.addEventListener("click", () => setTopTab(btn.dataset.topTab));
 });
 document.addEventListener("keydown", handleCircleKeyboard);
+document.addEventListener("keydown", handleGlobalEscape);
 if (circleModule) {
   circleModule.addEventListener("keydown", handleCircleKeyboard);
 }
@@ -1581,7 +2055,7 @@ if (metronomeCollapseBtn && fixedMetronome) {
 buildBoard();
 buildCircle();
 setActive(0);
-renderPhraseLibrary();
+initPhraseLibrary();
 setTopTab("training");
 setTrainingView(getTrainingView());
 setMode("training");
