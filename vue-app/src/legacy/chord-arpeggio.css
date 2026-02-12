@@ -1291,31 +1291,33 @@ body.chord-arpeggio .phrase-card-info {
   padding: 10px;
   display: grid;
   align-content: start;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
   min-height: 0;
 }
 
 body.chord-arpeggio .phrase-card-title {
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.12;
   width: 100%;
   text-align: left;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 2.4em;
+  min-height: 2.1em;
 }
 
 body.chord-arpeggio .phrase-card-meta {
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.2;
-  color: rgba(71, 85, 105, 0.92);
+  color: rgba(71, 85, 105, 0.78);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 1px;
 }
 
 body.chord-arpeggio .phrase-card-tags {
@@ -1508,7 +1510,7 @@ body.chord-arpeggio .phrase-viewer-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 18px;
+  gap: 8px 14px;
   padding: 8px 10px;
   border: 1px solid #c7dbff;
   border-radius: 10px;
@@ -1522,6 +1524,15 @@ body.chord-arpeggio .phrase-viewer-meta > div {
   align-items: baseline;
   gap: 4px;
   white-space: nowrap;
+}
+
+body.chord-arpeggio .phrase-meta-edit-btn {
+  margin-left: auto;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 body.chord-arpeggio .phrase-viewer-meta strong {

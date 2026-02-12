@@ -194,6 +194,7 @@ const circleProgressions = document.getElementById("circleProgressions");
 const phraseList = document.getElementById("phraseList");
 const phraseFormModal = document.getElementById("phraseFormModal");
 const phraseForm = document.getElementById("phraseForm");
+const phraseFormTitle = document.getElementById("phraseFormTitle");
 const phraseFormCloseBtn = document.getElementById("phraseFormCloseBtn");
 const phraseFormCancelBtn = document.getElementById("phraseFormCancelBtn");
 const phraseNameInput = document.getElementById("phraseNameInput");
@@ -247,6 +248,7 @@ const phraseFilterState = {
   tag: "",
   query: "",
 };
+let phraseEditingId = null;
 const phraseDbConfig = {
   name: "fretflow_phrase_library",
   version: 1,
@@ -1321,19 +1323,59 @@ async function savePhraseItem(item) {
   });
 }
 
+async function updatePhraseItem(item) {
+  const db = await openPhraseDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(phraseDbConfig.storeName, "readwrite");
+    const store = tx.objectStore(phraseDbConfig.storeName);
+    const request = store.put(item);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 function openPhraseForm() {
   if (!phraseFormModal || !phraseForm) return;
+  phraseEditingId = null;
   phraseForm.reset();
+  if (phraseFormTitle) phraseFormTitle.textContent = "新增乐句";
   if (phraseUploadedAtInput) {
     phraseUploadedAtInput.value = getNowDateTimeLocal();
   }
   if (phraseTagInput) phraseTagInput.value = "曲谱";
+  if (phraseFileInput) phraseFileInput.required = true;
+  phraseFormModal.hidden = false;
+  if (phraseNameInput) phraseNameInput.focus();
+}
+
+function openPhraseEditForm(item) {
+  if (!phraseFormModal || !phraseForm || !item) return;
+  phraseEditingId = item.id ?? null;
+  phraseForm.reset();
+  if (phraseFormTitle) phraseFormTitle.textContent = "编辑乐句信息";
+  if (phraseNameInput) phraseNameInput.value = item.title || item.name || "";
+  if (phraseAuthorInput) phraseAuthorInput.value = item.author || "";
+  if (phraseUploadedAtInput) {
+    const localValue = getNowDateTimeLocal();
+    const parsed = new Date(item.uploadedAt || "");
+    if (!Number.isNaN(parsed.getTime())) {
+      const tzOffset = parsed.getTimezoneOffset() * 60000;
+      phraseUploadedAtInput.value = new Date(parsed.getTime() - tzOffset).toISOString().slice(0, 16);
+    } else {
+      phraseUploadedAtInput.value = localValue;
+    }
+  }
+  if (phraseTagInput) phraseTagInput.value = item.fileTag || inferPhraseTag(item.fileName || "", item.mimeType || "");
+  if (phraseFileInput) phraseFileInput.required = false;
   phraseFormModal.hidden = false;
   if (phraseNameInput) phraseNameInput.focus();
 }
 
 function closePhraseForm() {
   if (!phraseFormModal) return;
+  phraseEditingId = null;
+  if (phraseFormTitle) phraseFormTitle.textContent = "新增乐句";
+  if (phraseFileInput) phraseFileInput.required = true;
   phraseFormModal.hidden = true;
 }
 
@@ -1549,10 +1591,17 @@ async function openPhraseViewer(item) {
   phraseViewerMeta.innerHTML = `
     <div><strong>名称：</strong>${item.title || "未命名"}</div>
     <div><strong>作者：</strong>${item.author || "未知作者"}</div>
-    <div><strong>上传时间：</strong>${toDisplayDate(item.uploadedAt)}</div>
-    <div><strong>类型：</strong>${item.typeLabel || "文件"}</div>
+    <div><strong>上传时间：</strong>${toDisplayDateOnly(item.uploadedAt)}</div>
     <div><strong>标签：</strong>${fileTag}</div>
+    <button type="button" class="btn-ghost phrase-meta-edit-btn" id="phraseEditMetaBtn">编辑信息</button>
   `;
+  const phraseEditMetaBtn = document.getElementById("phraseEditMetaBtn");
+  if (phraseEditMetaBtn) {
+    phraseEditMetaBtn.addEventListener("click", () => {
+      closePhraseViewer();
+      openPhraseEditForm(item);
+    });
+  }
 
   const mediaKind = getPhraseMediaKind(item);
   if (mediaKind === "image" && item.fileBlob) {
@@ -1660,30 +1709,58 @@ async function handlePhraseFormSubmit(event) {
   event.preventDefault();
   if (!phraseFileInput || !phraseNameInput || !phraseAuthorInput || !phraseUploadedAtInput) return;
   const file = phraseFileInput.files && phraseFileInput.files[0];
-  if (!file) return;
-  const title = phraseNameInput.value.trim() || inferSongMeta(file.name).title;
+  const titleBase = file ? inferSongMeta(file.name).title : "未命名";
+  const title = phraseNameInput.value.trim() || titleBase;
   const author = phraseAuthorInput.value.trim() || "未知作者";
   const uploadedAt = phraseUploadedAtInput.value || getNowDateTimeLocal();
+  if (phraseEditingId != null) {
+    const targetIndex = phraseDemoItems.findIndex((item) => item.id === phraseEditingId);
+    if (targetIndex >= 0) {
+      const existing = phraseDemoItems[targetIndex];
+      const nextFile = file || existing.fileBlob;
+      const nextName = nextFile ? nextFile.name : existing.fileName || "";
+      const nextMime = nextFile ? (nextFile.type || "") : (existing.mimeType || "");
+      const fileTag = phraseTagInput && phraseTagInput.value
+        ? phraseTagInput.value
+        : inferPhraseTag(nextName, nextMime);
+      const updated = {
+        ...existing,
+        fileName: nextName,
+        title,
+        author,
+        uploadedAt,
+        typeLabel: inferPhraseType(nextName),
+        fileTag,
+        sizeKB: nextFile ? (nextFile.size / 1024).toFixed(1) : existing.sizeKB,
+        size: nextFile ? nextFile.size : existing.size,
+        mimeType: nextMime,
+        fileBlob: nextFile,
+      };
+      await updatePhraseItem(updated);
+      phraseDemoItems[targetIndex] = updated;
+    }
+  } else {
+    if (!file) return;
+    const fileTag = phraseTagInput && phraseTagInput.value
+      ? phraseTagInput.value
+      : inferPhraseTag(file.name, file.type || "");
+    const item = {
+      fileName: file.name,
+      title,
+      author,
+      uploadedAt,
+      typeLabel: inferPhraseType(file.name),
+      fileTag,
+      sizeKB: (file.size / 1024).toFixed(1),
+      size: file.size,
+      mimeType: file.type || "",
+      fileBlob: file,
+    };
 
-  const fileTag = phraseTagInput && phraseTagInput.value
-    ? phraseTagInput.value
-    : inferPhraseTag(file.name, file.type || "");
-  const item = {
-    fileName: file.name,
-    title,
-    author,
-    uploadedAt,
-    typeLabel: inferPhraseType(file.name),
-    fileTag,
-    sizeKB: (file.size / 1024).toFixed(1),
-    size: file.size,
-    mimeType: file.type || "",
-    fileBlob: file,
-  };
-
-  const createdId = await savePhraseItem(item);
-  item.id = createdId;
-  phraseDemoItems.unshift(item);
+    const createdId = await savePhraseItem(item);
+    item.id = createdId;
+    phraseDemoItems.unshift(item);
+  }
   renderPhraseLibrary();
   closePhraseForm();
 }
