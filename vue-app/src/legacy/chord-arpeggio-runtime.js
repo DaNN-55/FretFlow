@@ -2357,7 +2357,6 @@ if (metronomeCollapseBtn && fixedMetronome) {
 buildBoard();
 buildCircle();
 setActive(0);
-initPhraseLibrary();
 setTopTab("training");
 setTrainingView(getTrainingView());
 setMode("training");

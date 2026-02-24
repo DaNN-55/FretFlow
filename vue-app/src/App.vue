@@ -40,15 +40,15 @@
       >
         自由训练
       </button>
-      <button
-        type="button"
+      <a
         class="top-tab-btn"
-        data-top-tab="phrase"
-        role="tab"
-        aria-selected="false"
+        href="https://www.songsterr.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="打开 Songsterr（外部网站，新标签页）"
       >
         乐句库
-      </button>
+      </a>
     </section>
 
     <div class="tab-panel tab-panel-training active" id="trainingTabPanel">
@@ -311,134 +311,19 @@
       id="phraseTabPanel"
     >
       <div class="phrase-library-head">
-        <h2>乐句库</h2>
+        <h2>Songsterr</h2>
+        <p>外部曲谱网站入口，点击下方按钮将在新标签页打开。</p>
       </div>
-      <div class="phrase-library-filters">
-        <label class="phrase-filter-field" for="phraseTagFilterSelect">
-          <span>标签筛选</span>
-          <select id="phraseTagFilterSelect" aria-label="按标签筛选乐句">
-            <option value="">全部标签</option>
-            <option value="曲谱">曲谱</option>
-            <option value="音频">音频</option>
-            <option value="文档">文档</option>
-            <option value="图片">图片</option>
-            <option value="其他">其他</option>
-          </select>
-        </label>
-        <label class="phrase-filter-field phrase-filter-search" for="phraseTitleSearchInput">
-          <span>标题搜索</span>
-          <input
-            id="phraseTitleSearchInput"
-            type="search"
-            placeholder="输入乐句名称"
-            aria-label="按标题搜索乐句"
-          />
-        </label>
-      </div>
-      <div class="phrase-grid" id="phraseList"></div>
+      <a
+        class="phrase-external-btn"
+        id="songsterrOpenBtn"
+        href="https://www.songsterr.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        前往 Songsterr
+      </a>
     </section>
-  </div>
-
-  <div
-    class="phrase-modal"
-    id="phraseFormModal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="phraseFormTitle"
-    hidden
-  >
-    <div class="phrase-modal-panel">
-      <div class="phrase-modal-head">
-        <h3 id="phraseFormTitle">新增乐句</h3>
-        <button
-          type="button"
-          class="phrase-modal-close"
-          id="phraseFormCloseBtn"
-          aria-label="关闭新增乐句弹窗"
-        >
-          ×
-        </button>
-      </div>
-      <form id="phraseForm" class="phrase-form">
-        <label class="field">
-          <span class="field-label">名称</span>
-          <input
-            id="phraseNameInput"
-            name="title"
-            type="text"
-            maxlength="64"
-            required
-            placeholder="例如：Hotel California Solo"
-          />
-        </label>
-        <label class="field">
-          <span class="field-label">作者</span>
-          <input
-            id="phraseAuthorInput"
-            name="author"
-            type="text"
-            maxlength="64"
-            required
-            placeholder="例如：Eagles"
-          />
-        </label>
-        <label class="field">
-          <span class="field-label">上传时间</span>
-          <input id="phraseUploadedAtInput" name="uploadedAt" type="datetime-local" required />
-        </label>
-        <label class="field">
-          <span class="field-label">上传文件</span>
-          <input
-            id="phraseFileInput"
-            name="file"
-            type="file"
-            accept=".gtp,.gp3,.gp4,.gp5,.gpx,.gp,.xml,.musicxml,.mxl,.mscz,.mscx,.ptb,.mp3,.m4a,.wav,.flac,.ogg,.aac,.jpg,.jpeg,.png,.webp,.gif,.pdf,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/ogg,audio/flac,image/*,application/pdf"
-            required
-          />
-        </label>
-        <label class="field">
-          <span class="field-label">文件标签</span>
-          <select id="phraseTagInput" name="fileTag">
-            <option value="曲谱">曲谱</option>
-            <option value="音频">音频</option>
-            <option value="文档">文档</option>
-            <option value="图片">图片</option>
-            <option value="其他">其他</option>
-          </select>
-        </label>
-        <div class="phrase-form-actions">
-          <button type="button" id="phraseFormCancelBtn" class="btn-ghost">
-            取消
-          </button>
-          <button type="submit" class="btn-primary">保存乐句</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div
-    class="phrase-modal"
-    id="phraseViewerModal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="phraseViewerTitle"
-    hidden
-  >
-    <div class="phrase-modal-panel phrase-viewer-panel">
-      <div class="phrase-modal-head">
-        <h3 id="phraseViewerTitle">乐句预览</h3>
-        <button
-          type="button"
-          class="phrase-modal-close"
-          id="phraseViewerCloseBtn"
-          aria-label="关闭乐句预览弹窗"
-        >
-          ×
-        </button>
-      </div>
-      <div id="phraseViewerMeta" class="phrase-viewer-meta"></div>
-      <div id="phraseViewerBody" class="phrase-viewer-body"></div>
-    </div>
   </div>
 
   <aside class="fixed-metronome" aria-label="全局节拍器">
@@ -492,8 +377,13 @@ import { onMounted } from "vue";
 onMounted(async () => {
   document.body.classList.add("chord-arpeggio", "mode-training");
   if (!window.__fretflowRuntimeLoaded) {
-    window.__fretflowRuntimeLoaded = true;
-    await import("./legacy/chord-arpeggio-runtime.js");
+    try {
+      await import("./legacy/chord-arpeggio-runtime.js");
+      window.__fretflowRuntimeLoaded = true;
+    } catch (error) {
+      window.__fretflowRuntimeLoaded = false;
+      console.error("Failed to load FretFlow runtime:", error);
+    }
   }
 });
 </script>
