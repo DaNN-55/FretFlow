@@ -2,7 +2,10 @@
   <div class="page">
     <header class="page-hero">
       <div class="hero-copy">
-        <p class="eyebrow">FretFlow</p>
+        <p class="eyebrow brand-eyebrow">
+          <img class="brand-eyebrow-logo" :src="logoUrl" alt="FretFlow Logo" />
+          <span>FretFlow</span>
+        </p>
         <h1>FretFlow · 音乐从指板到表达</h1>
         <p class="hero-subtitle">
           不再死记音阶与指型，而是理解它们为什么好听。
@@ -373,6 +376,7 @@
 
 <script setup>
 import { onMounted } from "vue";
+import logoUrl from "./legacy/logo.png";
 
 onMounted(async () => {
   document.body.classList.add("chord-arpeggio", "mode-training");

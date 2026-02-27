@@ -23,6 +23,19 @@ body.chord-arpeggio .top-tab-btn[href] {
   text-decoration: none;
 }
 
+body.chord-arpeggio .brand-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.chord-arpeggio .brand-eyebrow-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
 body.chord-arpeggio .phrase-external-btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.02);
@@ -39,4 +52,30 @@ body.chord-arpeggio .phrase-external-btn:focus-visible {
     width: 100%;
     justify-self: stretch;
   }
+}
+
+/* Circle-of-fifths: darken ring sectors (fan shapes), not key label pills. */
+body.chord-arpeggio .circle-ring-segment.outer-segment {
+  opacity: 0.86;
+  filter: saturate(1.04) brightness(0.72) contrast(1.08);
+}
+
+body.chord-arpeggio .circle-ring-segment.inner-segment {
+  opacity: 0.7;
+  filter: saturate(1.02) brightness(0.76) contrast(1.06);
+}
+
+body.chord-arpeggio .circle-ring-segment.is-related {
+  opacity: 0.9;
+  filter: saturate(1.14) brightness(0.68) contrast(1.14);
+}
+
+body.chord-arpeggio .circle-ring-segment.is-hover {
+  opacity: 0.88;
+  filter: saturate(1.08) brightness(0.7) contrast(1.1);
+}
+
+body.chord-arpeggio .circle-ring-segment.is-active {
+  opacity: 1;
+  filter: saturate(1.32) brightness(0.66) contrast(1.2);
 }

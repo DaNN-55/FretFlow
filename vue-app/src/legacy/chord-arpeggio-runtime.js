@@ -319,6 +319,30 @@ function isInChordPosition(fret, chordPosition) {
   return fret >= range[0] && fret <= range[1];
 }
 
+function getVoicedChordFrets(root, chordType, chordPosition) {
+  const chordFormula = chordFormulas[chordType] || chordFormulas.majorTriad;
+  const chordSet = new Set(getNotesFromFormula(root, chordFormula.intervals));
+  const voicedFretsByString = new Map();
+
+  for (let sIdx = 5; sIdx >= 0; sIdx -= 1) {
+    const noteEls = Array.from(
+      document.querySelectorAll(`.note[data-string="${sIdx}"]`),
+    );
+    const candidates = noteEls.filter((noteEl) => {
+      const noteName = noteEl.dataset.note;
+      const fret = parseInt(noteEl.dataset.fret, 10);
+      return chordSet.has(noteName) && isInChordPosition(fret, chordPosition);
+    });
+    if (candidates.length === 0) continue;
+    candidates.sort(
+      (a, b) => parseInt(a.dataset.fret, 10) - parseInt(b.dataset.fret, 10),
+    );
+    voicedFretsByString.set(sIdx, parseInt(candidates[0].dataset.fret, 10));
+  }
+
+  return voicedFretsByString;
+}
+
 function setChordPosition(position) {
   if (chordPositionSelect) {
     chordPositionSelect.value = String(position);
@@ -661,7 +685,7 @@ function updateScaleAndChord() {
   const scaleNotes = new Set(
     getNotesFromFormula(root, scaleFormulas[scaleType]),
   );
-  const chordFormula = chordFormulas[chordType];
+  const chordFormula = chordFormulas[chordType] || chordFormulas.majorTriad;
   const chordNotes = getNotesFromFormula(root, chordFormula.intervals);
   const chordNoteSet = new Set(chordNotes);
 
@@ -683,6 +707,10 @@ function updateScaleAndChord() {
     arpeggioToggle.checked;
   const showCaged = isCagedMode ? cagedToggle.checked : false;
   const activeChordPosition = getActiveChordPosition();
+  const voicedChordFrets =
+    showChordTones && !isCagedMode
+      ? getVoicedChordFrets(root, chordType, activeChordPosition)
+      : new Map();
 
   board.classList.toggle("show-scale", showScale);
   board.classList.toggle("show-chord", showChordTones);
@@ -706,7 +734,7 @@ function updateScaleAndChord() {
     const showInScale = isCagedMode
       ? !showCaged && inPattern && scaleNotes.has(noteName)
       : showChordTones
-        ? isChord && isInChordPosition(fret, activeChordPosition)
+        ? isChord && voicedChordFrets.get(sIdx) === fret
         : arpeggioMode
           ? isChord
           : showScale && scaleNotes.has(noteName);
@@ -1348,22 +1376,17 @@ function playChordForPosition() {
   unlockTrainingAudio();
   const root = rootSelect.value;
   const chordType = chordSelect.value;
-  const chordFormula = chordFormulas[chordType] || chordFormulas.majorTriad;
-  const chordSet = new Set(getNotesFromFormula(root, chordFormula.intervals));
   const position = parseInt(chordPositionSelect.value, 10);
+  const voicedChordFrets = getVoicedChordFrets(root, chordType, position);
   const selectedMidis = [];
 
   for (let sIdx = 5; sIdx >= 0; sIdx -= 1) {
-    const noteEls = Array.from(document.querySelectorAll(`.note[data-string="${sIdx}"]`));
-    const candidates = noteEls.filter((noteEl) => {
-      const noteName = noteEl.dataset.note;
-      const fret = parseInt(noteEl.dataset.fret, 10);
-      return chordSet.has(noteName) && isInChordPosition(fret, position);
-    });
-    if (candidates.length === 0) continue;
-    candidates.sort((a, b) => parseInt(a.dataset.fret, 10) - parseInt(b.dataset.fret, 10));
-    const chosen = candidates[0];
-    const fret = parseInt(chosen.dataset.fret, 10);
+    const fret = voicedChordFrets.get(sIdx);
+    if (fret == null) continue;
+    const chosen = document.querySelector(
+      `.note[data-string="${sIdx}"][data-fret="${fret}"]`,
+    );
+    if (!chosen) continue;
     selectedMidis.push(getFretMidi(sIdx, fret));
     chosen.classList.add("hit-preview");
     setTimeout(() => chosen.classList.remove("hit-preview"), 260);
@@ -2361,7 +2384,6 @@ setTopTab("training");
 setTrainingView(getTrainingView());
 setMode("training");
 updateScaleAndChord();
-
 
 
 
