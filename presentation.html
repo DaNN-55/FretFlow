@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FretFlow 功能演示</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===========================================
+       THEME TOKENS
+       Change these values to quickly re-theme deck.
+       =========================================== */
+    :root {
+      --bg-primary: #f2f3ef;
+      --bg-secondary: #ffffff;
+      --text-primary: #12151c;
+      --text-secondary: #4d5668;
+      --accent: #0f62fe;
+      --accent-soft: rgba(15, 98, 254, 0.2);
+      --accent-glow: rgba(15, 98, 254, 0.24);
+
+      --font-display: "Space Grotesk", sans-serif;
+      --font-body: "IBM Plex Sans", sans-serif;
+      --title-size: clamp(1.5rem, 5vw, 4rem);
+      --h2-size: clamp(1.2rem, 3.5vw, 2.5rem);
+      --h3-size: clamp(1rem, 2.5vw, 1.7rem);
+      --body-size: clamp(0.72rem, 1.4vw, 1.04rem);
+      --small-size: clamp(0.64rem, 1vw, 0.86rem);
+
+      --slide-padding: clamp(1rem, 4vw, 4rem);
+      --content-gap: clamp(0.55rem, 2vw, 1.7rem);
+      --element-gap: clamp(0.3rem, 1vw, 0.8rem);
+
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-normal: 0.62s;
+      --duration-fast: 0.35s;
+    }
+
+    /* ===========================================
+       VIEWPORT FITTING: MANDATORY BASE STYLES
+       =========================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background:
+        radial-gradient(1200px 800px at 5% 0%, rgba(15, 98, 254, 0.11), transparent 55%),
+        radial-gradient(1000px 700px at 100% 100%, rgba(70, 108, 186, 0.1), transparent 55%),
+        var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: var(--slide-padding);
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-height: 100%;
+      overflow: hidden;
+      gap: var(--content-gap);
+    }
+
+    /* ===========================================
+       NAVIGATION + PROGRESS
+       =========================================== */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 30;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), #46a2ff);
+      box-shadow: 0 0 16px var(--accent-glow);
+      transition: width var(--duration-fast) ease;
+    }
+
+    .nav-dots {
+      position: fixed;
+      right: clamp(0.55rem, 1.4vw, 1rem);
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.35rem, 0.8vw, 0.7rem);
+      z-index: 30;
+    }
+
+    .nav-dot {
+      width: clamp(0.45rem, 0.9vw, 0.66rem);
+      height: clamp(0.45rem, 0.9vw, 0.66rem);
+      border-radius: 50%;
+      border: 1px solid rgba(18, 21, 28, 0.28);
+      background: rgba(18, 21, 28, 0.08);
+      cursor: pointer;
+      transition: transform var(--duration-fast) ease, background var(--duration-fast) ease;
+    }
+
+    .nav-dot.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.24);
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      left: clamp(0.8rem, 2vw, 1.2rem);
+      bottom: clamp(0.6rem, 1.2vw, 1rem);
+      color: var(--text-secondary);
+      font-size: var(--small-size);
+      z-index: 20;
+    }
+
+    /* ===========================================
+       TYPOGRAPHY + COMPONENTS
+       =========================================== */
+    .eyebrow {
+      font-size: var(--small-size);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #285bc7;
+    }
+
+    h1,
+    h2 {
+      font-family: var(--font-display);
+      letter-spacing: 0.01em;
+      line-height: 1.04;
+      max-width: 18ch;
+    }
+
+    h1 { font-size: var(--title-size); }
+    h2 { font-size: var(--h2-size); }
+
+    .lead,
+    .bullet-list li {
+      font-size: var(--body-size);
+      color: var(--text-secondary);
+      line-height: 1.42;
+      max-width: 64ch;
+    }
+
+    .title-card,
+    .feature-card {
+      width: min(92vw, 1080px);
+      max-height: min(80vh, 700px);
+      border: 1px solid var(--accent-soft);
+      border-radius: 22px;
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.6));
+      box-shadow: 0 8px 28px rgba(16, 28, 48, 0.12);
+      padding: clamp(0.9rem, 3.2vw, 2.4rem);
+      overflow: hidden;
+    }
+
+    .feature-layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+      gap: clamp(0.55rem, 1.4vw, 1rem);
+      align-items: center;
+    }
+
+    .mockup {
+      min-height: clamp(120px, 20vh, 210px);
+      max-height: min(38vh, 300px);
+      border-radius: 14px;
+      border: 1px solid rgba(15, 98, 254, 0.22);
+      background:
+        linear-gradient(135deg, rgba(15, 98, 254, 0.2), rgba(15, 98, 254, 0.03)),
+        repeating-linear-gradient(90deg, rgba(15, 98, 254, 0.06) 0 1px, transparent 1px 26px),
+        var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.76rem, 1.2vw, 0.95rem);
+      color: #1f4ead;
+      text-align: center;
+      padding: clamp(0.6rem, 1.5vw, 1rem);
+    }
+
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.35rem, 1vh, 0.8rem);
+    }
+
+    .bullet-list li::before {
+      content: "• ";
+      color: #0f62fe;
+      margin-right: 0.15rem;
+    }
+
+    /* ===========================================
+       REVEAL ANIMATIONS
+       =========================================== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(14px);
+      transition:
+        opacity var(--duration-normal) var(--ease-out-expo),
+        transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal:nth-child(1) { transition-delay: 0.08s; }
+    .reveal:nth-child(2) { transition-delay: 0.16s; }
+    .reveal:nth-child(3) { transition-delay: 0.24s; }
+    .reveal:nth-child(4) { transition-delay: 0.32s; }
+
+    /* ===========================================
+       RESPONSIVE BREAKPOINTS
+       =========================================== */
+    @media (max-height: 700px) {
+      :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+        --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+        --h2-size: clamp(1rem, 3vw, 1.75rem);
+      }
+    }
+
+    @media (max-height: 600px) {
+      :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+        --title-size: clamp(1.1rem, 4vw, 2rem);
+        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+      }
+
+      .nav-dots,
+      .keyboard-hint {
+        display: none;
+      }
+    }
+
+    @media (max-height: 500px) {
+      :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size: clamp(1rem, 3.5vw, 1.5rem);
+        --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size: clamp(0.65rem, 1vw, 0.85rem);
+      }
+    }
+
+    @media (max-width: 600px) {
+      :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); }
+      .feature-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+      }
+      html { scroll-behavior: auto; }
+      .reveal { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" aria-hidden="true"><div class="progress-fill"></div></div>
+  <nav class="nav-dots" aria-label="Slide navigation"></nav>
+  <div class="keyboard-hint">← → / Space / Scroll / Swipe</div>
+
+  <main>
+    <section class="slide title-slide">
+      <div class="slide-content">
+        <article class="title-card">
+          <p class="eyebrow reveal">FretFlow Showcase</p>
+          <h1 class="reveal">FretFlow 网页主要功能演示</h1>
+          <p class="lead reveal">5 页速览，覆盖核心练习模式、可视化交互与节奏训练能力。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-content">
+        <article class="feature-card feature-layout">
+          <div>
+            <p class="eyebrow reveal">Feature 01</p>
+            <h2 class="reveal">自由训练模式</h2>
+            <ul class="bullet-list reveal">
+              <li>在同一界面完成调式、和弦、根音联动练习</li>
+              <li>点击指板音位可即时发声，强化听感和手感对应</li>
+              <li>适合日常热身、音阶记忆与即兴前准备</li>
+              <li>参数切换反馈直接，降低练习中断成本</li>
+            </ul>
+          </div>
+          <div class="mockup reveal">Interactive Fretboard Practice Surface</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-content">
+        <article class="feature-card feature-layout">
+          <div>
+            <p class="eyebrow reveal">Feature 02</p>
+            <h2 class="reveal">CAGED 模式</h2>
+            <ul class="bullet-list reveal">
+              <li>将指板按 C-A-G-E-D 五种形状拆解并可视化</li>
+              <li>按钮切换不同把位，快速建立横向连接</li>
+              <li>兼容和弦与琶音练习，便于系统化掌握指板</li>
+              <li>降低“知道音名但找不到形状”的学习断层</li>
+            </ul>
+          </div>
+          <div class="mockup reveal">CAGED Pattern Toggle + Position Focus</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-content">
+        <article class="feature-card feature-layout">
+          <div>
+            <p class="eyebrow reveal">Feature 03</p>
+            <h2 class="reveal">五度圈模式</h2>
+            <ul class="bullet-list reveal">
+              <li>通过五度圈快速定位调性关系与转调路径</li>
+              <li>把理论关系映射到指板高亮，学习更直观</li>
+              <li>支持和声理解、伴奏设计与即兴选音决策</li>
+              <li>适合从“背知识”过渡到“用知识”</li>
+            </ul>
+          </div>
+          <div class="mockup reveal">Circle of Fifths + Fretboard Highlight Sync</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-content">
+        <article class="feature-card feature-layout">
+          <div>
+            <p class="eyebrow reveal">Feature 04</p>
+            <h2 class="reveal">节拍器与训练闭环</h2>
+            <ul class="bullet-list reveal">
+              <li>支持 BPM、拍号、灯光节拍提示与折叠控制</li>
+              <li>练习节奏与指板记忆同屏进行，减少切换干扰</li>
+              <li>从“看图”到“跟拍练习”形成完整训练链路</li>
+              <li>桌面与移动宽度下都能保持可用布局</li>
+            </ul>
+          </div>
+          <div class="mockup reveal">Metronome Controls + Pulse Lights</div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ===========================================
+       SLIDE PRESENTATION CONTROLLER
+       Handles keyboard, wheel, touch, progress, and nav dots.
+       =========================================== */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll(".slide"));
+        this.nav = document.querySelector(".nav-dots");
+        this.progressFill = document.querySelector(".progress-fill");
+        this.currentIndex = 0;
+        this.isThrottled = false;
+        this.touchStartY = 0;
+        this.touchEndY = 0;
+        this.buildNavDots();
+        this.bindEvents();
+        this.observeSlides();
+        this.goToSlide(0, false);
+      }
+
+      buildNavDots() {
+        this.slides.forEach((_, index) => {
+          const dot = document.createElement("button");
+          dot.className = "nav-dot";
+          dot.type = "button";
+          dot.setAttribute("aria-label", "Go to slide " + (index + 1));
+          dot.addEventListener("click", () => this.goToSlide(index));
+          this.nav.appendChild(dot);
+        });
+      }
+
+      bindEvents() {
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowRight" || event.key === " ") {
+            event.preventDefault();
+            this.nextSlide();
+          }
+          if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            this.prevSlide();
+          }
+        });
+
+        window.addEventListener("wheel", (event) => {
+          if (this.isThrottled) return;
+          this.isThrottled = true;
+          if (event.deltaY > 5) this.nextSlide();
+          if (event.deltaY < -5) this.prevSlide();
+          window.setTimeout(() => { this.isThrottled = false; }, 450);
+        }, { passive: true });
+
+        window.addEventListener("touchstart", (event) => {
+          this.touchStartY = event.changedTouches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener("touchend", (event) => {
+          this.touchEndY = event.changedTouches[0].clientY;
+          const delta = this.touchStartY - this.touchEndY;
+          if (Math.abs(delta) < 50) return;
+          if (delta > 0) this.nextSlide();
+          if (delta < 0) this.prevSlide();
+        }, { passive: true });
+
+        document.addEventListener("scroll", () => this.syncFromScroll(), { passive: true });
+        window.addEventListener("resize", () => this.syncFromScroll());
+      }
+
+      observeSlides() {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add("visible");
+          });
+        }, { threshold: 0.55 });
+
+        this.slides.forEach((slide) => observer.observe(slide));
+      }
+
+      nextSlide() {
+        this.goToSlide(Math.min(this.currentIndex + 1, this.slides.length - 1));
+      }
+
+      prevSlide() {
+        this.goToSlide(Math.max(this.currentIndex - 1, 0));
+      }
+
+      goToSlide(index, smooth = true) {
+        this.currentIndex = index;
+        this.slides[index].scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+        this.updateUi();
+      }
+
+      syncFromScroll() {
+        const viewportCenter = window.scrollY + window.innerHeight * 0.5;
+        const nearestIndex = this.slides.reduce((closest, slide, index) => {
+          const slideCenter = slide.offsetTop + slide.offsetHeight * 0.5;
+          const currentDiff = Math.abs(slideCenter - viewportCenter);
+          const bestDiff = Math.abs(this.slides[closest].offsetTop + this.slides[closest].offsetHeight * 0.5 - viewportCenter);
+          return currentDiff < bestDiff ? index : closest;
+        }, 0);
+        if (nearestIndex !== this.currentIndex) {
+          this.currentIndex = nearestIndex;
+          this.updateUi();
+        }
+      }
+
+      updateUi() {
+        const dots = Array.from(document.querySelectorAll(".nav-dot"));
+        dots.forEach((dot, index) => dot.classList.toggle("active", index === this.currentIndex));
+        const percent = ((this.currentIndex + 1) / this.slides.length) * 100;
+        this.progressFill.style.width = percent + "%";
+      }
+    }
+
+    new SlidePresentation();
+  </script>
+</body>
+</html>

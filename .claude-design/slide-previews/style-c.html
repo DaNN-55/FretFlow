@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style C - Dark Botanical</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1411;
+      --text: #f4efe6;
+      --muted: #c9c2b3;
+      --accent: #c5a059;
+      --title-size: clamp(1.6rem, 6.2vw, 4.3rem);
+      --body-size: clamp(0.8rem, 1.7vw, 1.06rem);
+      --slide-padding: clamp(1rem, 4vw, 4rem);
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html, body { height: 100%; overflow-x: hidden; scroll-snap-type: y mandatory; }
+    body {
+      font-family: "Plus Jakarta Sans", sans-serif; color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(197, 160, 89, 0.12), transparent 45%),
+        radial-gradient(circle at 80% 90%, rgba(56, 90, 58, 0.22), transparent 50%),
+        var(--bg);
+    }
+    .slide { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; scroll-snap-align: start; display: flex; padding: var(--slide-padding); }
+    .slide-content {
+      flex: 1; max-height: 100%; overflow: hidden; display: flex; flex-direction: column; justify-content: center;
+      gap: clamp(0.6rem, 1.8vw, 1.2rem); padding: clamp(1rem, 4vw, 2.5rem);
+      border: 1px solid rgba(197, 160, 89, 0.25); border-radius: 20px; backdrop-filter: blur(2px);
+    }
+    .kicker { color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em; font-size: clamp(0.64rem, 1.2vw, 0.82rem); }
+    h1 { font-family: "Cormorant Garamond", serif; font-size: var(--title-size); line-height: 0.95; max-width: 12ch; }
+    p { color: var(--muted); font-size: var(--body-size); max-width: 56ch; }
+    .reveal { opacity: 0; filter: blur(8px); animation: in 0.95s ease forwards; }
+    .reveal:nth-child(2) { animation-delay: 0.12s; }
+    .reveal:nth-child(3) { animation-delay: 0.24s; }
+    @keyframes in { to { opacity: 1; filter: blur(0); } }
+    @media (max-height: 700px) { :root { --slide-padding: clamp(0.8rem, 3vw, 2rem); } }
+    @media (max-height: 600px) { :root { --title-size: clamp(1.2rem, 5vw, 2rem); } }
+    @media (max-height: 500px) { .kicker { display: none; } }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="slide-content">
+      <div class="kicker reveal">STYLE C · DARK BOTANICAL</div>
+      <h1 class="reveal">FretFlow Feature Journey</h1>
+      <p class="reveal">Elegant dark atmosphere, warm accents, and cinematic motion for a premium storytelling tone.</p>
+    </div>
+  </section>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style B - Swiss Modern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f4f1;
+      --text: #111318;
+      --muted: #555e6f;
+      --accent: #0062ff;
+      --title-size: clamp(1.5rem, 5.8vw, 4rem);
+      --body-size: clamp(0.8rem, 1.7vw, 1.05rem);
+      --slide-padding: clamp(1rem, 4vw, 4rem);
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html, body { height: 100%; overflow-x: hidden; scroll-snap-type: y mandatory; }
+    body { background: linear-gradient(135deg, #fff, var(--bg)); color: var(--text); font-family: "IBM Plex Sans", sans-serif; }
+    .slide { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; scroll-snap-align: start; display: flex; padding: var(--slide-padding); }
+    .slide-content { flex: 1; max-height: 100%; overflow: hidden; display: grid; align-content: center; gap: clamp(0.7rem, 2vw, 1.1rem); border-left: 8px solid var(--accent); padding-left: clamp(0.9rem, 3vw, 2rem); }
+    h1 { font-family: "Space Grotesk", sans-serif; font-size: var(--title-size); line-height: 1.02; max-width: 14ch; }
+    p { font-size: var(--body-size); max-width: 60ch; color: var(--muted); }
+    .tag { font-size: clamp(0.68rem, 1.3vw, 0.88rem); letter-spacing: 0.11em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    .reveal { opacity: 0; transform: translateX(-24px); animation: in 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .reveal:nth-child(2) { animation-delay: 0.1s; }
+    .reveal:nth-child(3) { animation-delay: 0.2s; }
+    @keyframes in { to { opacity: 1; transform: translateX(0); } }
+    @media (max-height: 700px) { :root { --slide-padding: clamp(0.8rem, 3vw, 2rem); } }
+    @media (max-height: 600px) { :root { --title-size: clamp(1.15rem, 4.5vw, 2rem); } }
+    @media (max-height: 500px) { .tag { display: none; } }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="slide-content">
+      <div class="tag reveal">STYLE B · SWISS MODERN</div>
+      <h1 class="reveal">FretFlow Core Features</h1>
+      <p class="reveal">Clean editorial grid, precise typography, and minimal motion for a calm and credible product story.</p>
+    </div>
+  </section>
+</body>
+</html>
