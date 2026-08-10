@@ -1,124 +1,81 @@
-﻿# FretFlow
+# FretFlow
 
-FretFlow 是一个用于吉他指板训练的 Vue 3 + Vite 项目。
+[FretFlow](https://dann-55.github.io/FretFlow/) 是一个用于吉他指板训练的 Vue 3 + Vite 应用。
 
-当前主应用位于 `vue-app/`，采用“Vue 外壳 + legacy 运行时”的结构：页面由 Vue 挂载，核心交互逻辑主要在 `vue-app/src/legacy/chord-arpeggio-runtime.js`。
+项目从真实练习场景出发，把音阶、和弦、CAGED、五度圈和节拍器整合到一个可直接使用的训练页面中。它是我独立完成的个人产品，用于探索“明确训练目标—即时反馈—持续练习”的工具化体验。
 
-## 当前功能（以 `vue-app` 为准）
+## Online demo
 
-- 自由训练（音阶 / 和弦 / CAGED / 五度圈）
-- 节拍器（BPM、拍号、灯光提示、折叠）
-- 顶部“乐句库”入口已改为外链：新标签页打开 Songsterr
+https://dann-55.github.io/FretFlow/
 
-说明：仓库根目录下的 `src/` 为历史静态版本，当前已废弃，不作为主开发入口。
+## Current features
 
-## 在线地址
+- 自由训练：音阶、和弦、CAGED、五度圈
+- 指板交互与音符反馈
+- 节拍器：BPM、拍号和灯光提示
+- 响应式桌面与移动端布局
+- 乐句库入口：在新标签页打开 Songsterr
 
-- GitHub Pages: <https://dann-55.github.io/FretFlow/>
+## Technical overview
 
-## 技术栈
+当前主应用位于 vue-app/，采用 Vue 外壳 + legacy 运行时的结构：
 
 - Vue 3
 - Vite
-- 原生 CSS / JavaScript（包含 legacy 运行时代码）
-- GitHub Pages（GitHub Actions 部署）
+- Pinia / Vue Router
+- 原生 CSS / JavaScript
+- GitHub Pages + GitHub Actions
 
-## 本地开发
+核心交互主要位于：
 
-### 环境要求
+- vue-app/src/App.vue：页面结构与应用挂载
+- vue-app/src/legacy/chord-arpeggio-runtime.js：指板、训练模式和节拍器逻辑
+- vue-app/src/vue-overrides.css：轻量样式覆盖
 
-- Node.js `20+`（建议 `22.x`）
-- npm `10+`
+根目录的 src/ 和 vue-app/_archive/ 仅用于历史参考，当前开发以 vue-app/ 为准。
 
-### 安装依赖
+## Local development
 
-```bash
+环境要求：Node.js 20+，建议使用 Node.js 22.x；npm 10+。
+
+~~~
 cd vue-app
 npm install
-```
-
-### 启动开发环境
-
-```bash
 npm run dev
-```
+~~~
 
-启动后打开终端输出的本地地址（通常是 `http://localhost:5173/`）。
+生产构建：
 
-### 构建生产版本
-
-```bash
+~~~
+cd vue-app
 npm run build
-```
-
-### 本地预览构建产物
-
-```bash
 npm run preview
-```
+~~~
 
-## 项目结构（当前有效）
+## Validation checklist
 
-```text
-FretFlow/
-├─ .github/workflows/           # GitHub Pages 部署工作流
-├─ vue-app/                     # 当前主项目（请在这里开发）
-│  ├─ index.html
-│  ├─ vite.config.js
-│  ├─ package.json
-│  ├─ FILES_GUIDE.md            # 当前生效文件说明（建议先读）
-│  └─ src/
-│     ├─ main.js                # Vue 入口，挂载 App
-│     ├─ App.vue                # 页面结构（Vue 壳）
-│     ├─ vue-overrides.css      # 覆盖层样式（优先在此做轻量覆盖）
-│     └─ legacy/
-│        ├─ chord-arpeggio-runtime.js  # 核心交互逻辑
-│        ├─ chord-arpeggio.css         # 主视觉样式
-│        └─ guitartraining.css         # 指板基础样式
-└─ src/                         # 历史静态版本（已废弃，不再维护）
-```
+- 自由训练页面正常显示
+- 模式切换正常
+- 指板渲染和点击发声正常
+- 五度圈切换正常
+- 节拍器开关、BPM、拍号和折叠按钮正常
+- 移动端和桌面端无明显错位
+- GitHub Pages 构建和发布正常
 
-## 开发约定（重要）
+## Deployment
 
-- 优先修改 `vue-app/`，不要再把功能改到根目录 `src/`
-- 轻量样式调整优先放在 `vue-app/src/vue-overrides.css`
-- 若涉及核心交互（模式切换、指板渲染、五度圈、节拍器），通常需要改 `vue-app/src/legacy/chord-arpeggio-runtime.js`
-- `App.vue` 主要负责页面结构与挂载，不建议把大量业务逻辑继续堆进去
+GitHub Pages 工作流位于 .github/workflows/deploy-pages.yml，部署目录为 vue-app/dist。
 
-## 手动验证清单（推荐）
+Vite 使用项目路径：
 
-运行 `vue-app` 后，至少验证以下内容：
+~~~
+base: "/FretFlow/"
+~~~
 
-- 顶部 `自由训练` 正常显示训练页
-- 顶部 `乐句库` 在新标签页打开 Songsterr，当前页不跳转
-- 模式切换（训练 / CAGED / 五度圈）正常
-- 指板渲染、点击发声正常
-- 五度圈交互与切换正常
-- 节拍器开关、BPM、拍号、折叠按钮正常
-- 移动端和桌面端布局无明显错位
+## Project status
 
-## 部署说明（GitHub Pages）
+项目仍在迭代中。当前重点是保持核心训练流程稳定，并逐步改善移动端体验和训练反馈。
 
-- 工作流文件：`.github/workflows/deploy-pages.yml`
-- 触发条件：推送到 `main`
-- 部署目录：`vue-app/dist`
+## License
 
-请确认仓库设置：
-
-1. `Settings -> Pages -> Source` 选择 `GitHub Actions`
-2. `Settings -> Actions -> General -> Workflow permissions` 选择 `Read and write permissions`
-
-## Vite Base 路径
-
-`vue-app/vite.config.js` 当前配置：
-
-```js
-base: "/FretFlow/";
-```
-
-用于适配 GitHub Pages 项目路径。
-
-## 备注
-
-- 历史版本/废弃代码仍保留在仓库中，主要用于参考或迁移对照
-- 若后续恢复“乐句库”内置功能，建议在 `vue-app` 内重新设计数据结构与组件边界，不再继续扩展旧的 legacy 乐句库逻辑
+This project is a personal learning and product prototyping project.
